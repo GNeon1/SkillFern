@@ -33,15 +33,19 @@
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>..\..\..\..\..\AppData\Roaming\r2modmanPlus-local\REPO\profiles\Modding - hotreload\BepInEx\core\0Harmony.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="BepInEx">
       <HintPath>..\..\..\..\..\AppData\Roaming\r2modmanPlus-local\REPO\profiles\Modding - hotreload\BepInEx\core\BepInEx.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="HarmonyXInterop">
       <HintPath>..\..\..\..\..\AppData\Roaming\r2modmanPlus-local\REPO\profiles\Modding - hotreload\BepInEx\core\HarmonyXInterop.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil, Version=0.11.6.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
       <HintPath>packages\Mono.Cecil.0.11.6\lib\net40\Mono.Cecil.dll</HintPath>
@@ -92,9 +96,11 @@
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -112,4 +118,8 @@
     <Folder Include="Patches\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy /Y "$(TargetPath)" "C:\Users\gideo\AppData\Roaming\r2modmanPlus-local\REPO\profiles\Modding - hotreload\BepInEx\scripts\"
+copy /Y "$(TargetDir)$(TargetName).pdb" "C:\Users\gideo\AppData\Roaming\r2modmanPlus-local\REPO\profiles\Modding - hotreload\BepInEx\scripts\"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
