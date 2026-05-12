@@ -6,6 +6,7 @@
 
 using BepInEx;
 using HarmonyLib;
+using SkillFern.Networking;
 using UnityEngine;
 
 namespace SkillFern
@@ -14,6 +15,7 @@ namespace SkillFern
     public class Plugin : BaseUnityPlugin
     {
 
+        public static Plugin instance;
         private Harmony harmony; // Harmony instance to patch with
 
         /*
@@ -21,14 +23,21 @@ namespace SkillFern
          */
         private void Awake()
         {
+            instance = this;
+
             // instantiate Harmony
             harmony = new Harmony("com.dajadeninja.repo.skillfern");
 
             // announce success and next step
-            Logger.LogInfo("Skill Fern loaded successfully! Loading patches. . .");
+            LogInfo("Loaded successfully! Loading patches. . .");
 
             // apply all patches
             harmony.PatchAll();
+            LogInfo("Patches loaded");
+
+            // start listening for network traffic
+            SkillNetworkSync.Initialize();
+            LogInfo("Network initialized");
         }
 
         /*
@@ -39,6 +48,11 @@ namespace SkillFern
             Logger.LogInfo("Skill Fern unloading. Cleaning up patches...");
 
             harmony?.UnpatchSelf();
+        }
+
+        public static void LogInfo(string msg)
+        {
+            instance.Logger.LogInfo($"Skill Fern: {msg}");
         }
     }
 }
