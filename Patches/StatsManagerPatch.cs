@@ -43,11 +43,11 @@ namespace SkillFern.Patches
         }
 
         /*
-         * AFTER StatsManager.RunStartStats
+         * AFTER StatsManager.Awake
          * 
-         * Initializes everything for the skill system at the start of a run
+         * Initializes everything for the skill system at the game launch
          */
-        [HarmonyPatch("RunStartStats")]
+        [HarmonyPatch("Awake")]
         [HarmonyPostfix]
         static void RunSetup()
         {

@@ -118,6 +118,7 @@
     <Compile Include="Custom\SkillDataManager.cs" />
     <Compile Include="Custom\SkillData.cs" />
     <Compile Include="Networking\SkillNetworkSync.cs" />
+    <Compile Include="Patches\MenuPageLobbyPatch.cs" />
     <Compile Include="Patches\ShopManagerPatch.cs" />
     <Compile Include="Patches\StatsManagerPatch.cs" />
     <Compile Include="Plugin.cs" />

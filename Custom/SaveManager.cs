@@ -51,13 +51,6 @@ namespace SkillFern.Custom
 
                 SkillDataManager.instance = SkillManager;
 
-                // load all save data from each skill
-                foreach (SkillData skillData in SkillManager.skillDatas) {
-                    foreach (string skill in SkillData.SKILL_NAMES) {
-                        SkillNetworkSync.UpdateSkill(skillData.steamID, skill, (int)typeof(SkillData).GetField(skill).GetValue(skillData));
-                    }
-                }
-
                 Plugin.LogInfo($"Loaded save data from {fullPath}");
             } else { // otherwise. . .
                 // create new default skill data and log creation
@@ -66,5 +59,6 @@ namespace SkillFern.Custom
                 Plugin.LogInfo($"Created new save data at {fullPath}");
             }
         }
+
     }
 }

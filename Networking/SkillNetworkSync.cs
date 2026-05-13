@@ -58,5 +58,19 @@ namespace SkillFern.Networking
             PhotonNetwork.RaiseEvent(SKILL_DATA_CHANNEL, payload, eventOptions, SendOptions.SendReliable);
         }
 
+        /*
+         * Syncs every skill between all players
+         */
+        public static void SyncAll() {
+            Plugin.LogInfo("Syncing all skill data. . .");
+
+            // for each skill data entry
+            foreach (SkillData skillData in SkillDataManager.instance.skillDatas)
+                // for each skill in the entry
+                foreach (string skill in SkillData.SKILL_NAMES)
+                    // sync that skill
+                    SkillNetworkSync.UpdateSkill(skillData.steamID, skill, (int)typeof(SkillData).GetField(skill).GetValue(skillData));
+        }
+
     }
 }
