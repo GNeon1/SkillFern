@@ -65,6 +65,7 @@ namespace SkillFern.Custom
          * @param newLevel - new level to update the skill to
          */
         public void UpdateSkill(string steamID, string skillName, int newLevel) {
+
             // repair skill datas if broken
             if (skillDatas == null) {
                 Plugin.LogInfo("Skill Data does not exist! Creating. . .");
@@ -91,7 +92,7 @@ namespace SkillFern.Custom
         }
 
         /*
-         * Updates the level of a skill on the local player based on its variable name
+         * Updates the level of a skill on the local player based on its variable name (does not network)
          * 
          * @param skillName - skill to update
          * @param newLevel - new level to update the skill to
@@ -99,8 +100,44 @@ namespace SkillFern.Custom
         public void UpdateLocalSkillByName(string skillName, int newLevel) {
             switch (skillName)
             {
+                case "healthLevels":
+                    PlayerHelper.UpdatePlayerHealth(newLevel);
+                    break;
                 case "staminaLevels":
                     PlayerHelper.UpdatePlayerEnergy(newLevel);
+                    break;
+                case "extraJumpLevels":
+                    PlayerHelper.UpdatePlayerExtraJump(newLevel);
+                    break;
+                case "launchLevels":
+                    PlayerHelper.UpdatePlayerLaunch(newLevel);
+                    break;
+                case "tumbleClimbLevels":
+                    PlayerHelper.UpdatePlayerTumbleClimb(newLevel);
+                    break;
+                case "deathHeadBatteryLevels":
+                    PlayerHelper.UpdatePlayerDeathHeadBattery(newLevel);
+                    break;
+                case "mapPlayerCountLevels":
+                    PlayerHelper.UpdatePlayerMapPlayerCount(newLevel);
+                    break;
+                case "speedLevels":
+                    PlayerHelper.UpdatePlayerSpeed(newLevel);
+                    break;
+                case "strengthLevels":
+                    PlayerHelper.UpdatePlayerStrength(newLevel);
+                    break;
+                case "rangeLevels":
+                    PlayerHelper.UpdatePlayerRange(newLevel);
+                    break;
+                case "throwLevels":
+                    PlayerHelper.UpdatePlayerThrow(newLevel);
+                    break;
+                case "crouchRestLevels":
+                    PlayerHelper.UpdatePlayerCrouchRest(newLevel);
+                    break;
+                case "tumbleWingsLevels":
+                    PlayerHelper.UpdatePlayerTumbleWings(newLevel);
                     break;
             }
         }

@@ -11,6 +11,19 @@ namespace SkillFern.Utilities
     {
 
         const int STARTING_ENERGY = 40; // base energy level for players (TODO: autodetect)
+        const int ENERGY_INCREMENT = 10; // amount energy increases per level (TODO: autodetect)
+
+        const int STARTING_HEALTH = 100; // base health level for players (TODO: autodetect)
+        const int HEALTH_INCREMENT = 20; // amount health increases per level (TODO: autodetect)
+
+        const float STARTING_SPEED = 5f; // base speed level for players (TODO: autodetect)
+
+        const float STARTING_STRENGTH = 1.0f; // base strength multiplier for players (TODO: autodetect)
+        const float STRENGTH_INCREMENT = 0.2f; // amount strength multiplier increases per level (TODO: autodetect)
+
+        const float STARTING_RANGE = 2.5f; // base grab range for players (TODO: autodetect)
+
+        const float THROW_INCREMENT = 0.3f; // amount throw strength multiplier increases per level (TODO: autodetect)
 
         /*
          * Checks if a given Steam ID matches the local player. (useful for responding to network events)
@@ -27,6 +40,10 @@ namespace SkillFern.Utilities
          */
         public static PlayerController GetLocalPlayerController() {
             return PlayerController.instance;
+        }
+
+        public static PlayerAvatar GetLocalPlayerAvatar() {
+            return PlayerAvatar.instance;
         }
 
         /*
@@ -47,8 +64,186 @@ namespace SkillFern.Utilities
 
             StatsManager.instance.playerUpgradeStamina[GetLocalSteamID()] = newLevel;
 
-            AccessTools.Field(typeof(PlayerController), "EnergyStart").SetValue(playerController, (float)(STARTING_ENERGY + newLevel * 10));
+            AccessTools.Field(typeof(PlayerController), "EnergyStart").SetValue(playerController, (float)(STARTING_ENERGY + newLevel * ENERGY_INCREMENT));
             AccessTools.Field(typeof(PlayerController), "EnergyCurrent").SetValue(playerController, playerController.EnergyStart);
         }
+
+        /*
+         * Sets health to given level for the local player
+         * 
+         * @param newLevel - new level to set
+         */
+        public static void UpdatePlayerHealth(int newLevel)
+        {
+            PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
+
+            int levelDifference = StatsManager.instance.playerUpgradeHealth.ContainsKey(GetLocalSteamID()) ? newLevel - StatsManager.instance.playerUpgradeHealth[GetLocalSteamID()] : newLevel;
+
+            StatsManager.instance.playerUpgradeHealth[GetLocalSteamID()] = newLevel;
+
+            AccessTools.Field(typeof(PlayerHealth), "maxHealth").SetValue(playerAvatar.playerHealth, (int)(STARTING_HEALTH + newLevel * HEALTH_INCREMENT));
+            
+            if (levelDifference > 0)
+                playerAvatar.playerHealth.Heal(levelDifference * HEALTH_INCREMENT);
+            else if (levelDifference < 0)
+                playerAvatar.playerHealth.Hurt(-levelDifference * HEALTH_INCREMENT, true);
+        }
+
+        /*
+         * Sets extra jump to given level for the local player
+         * 
+         * @param newLevel - new level to set
+         */
+        public static void UpdatePlayerExtraJump(int newLevel)
+        {
+            PlayerController playerController = GetLocalPlayerController();
+
+            StatsManager.instance.playerUpgradeExtraJump[GetLocalSteamID()] = newLevel;
+
+            AccessTools.Field(typeof(PlayerController), "JumpExtra").SetValue(playerController, newLevel);
+        }
+
+        /*
+         * Sets tumble launch to given level for the local player
+         * 
+         * @param newLevel - new level to set
+         */
+        public static void UpdatePlayerLaunch(int newLevel)
+        {
+            PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
+
+            StatsManager.instance.playerUpgradeLaunch[GetLocalSteamID()] = newLevel;
+
+            AccessTools.Field(typeof(PlayerTumble), "tumbleLaunch").SetValue(AccessTools.Field(typeof(PlayerAvatar), "tumble").GetValue(playerAvatar), newLevel);
+        }
+
+        /*
+         * Sets tumble climb to given level for the local player
+         * 
+         * @param newLevel - new level to set
+         */
+        public static void UpdatePlayerTumbleClimb(int newLevel)
+        {
+            PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
+
+            StatsManager.instance.playerUpgradeTumbleClimb[GetLocalSteamID()] = newLevel;
+
+            AccessTools.Field(typeof(PlayerAvatar), "upgradeTumbleClimb").SetValue(playerAvatar, (float)newLevel);
+        }
+
+        /*
+         * Sets death head battery to given level for the local player
+         * 
+         * @param newLevel - new level to set
+         */
+        public static void UpdatePlayerDeathHeadBattery(int newLevel)
+        {
+            PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
+
+            StatsManager.instance.playerUpgradeDeathHeadBattery[GetLocalSteamID()] = newLevel;
+
+            AccessTools.Field(typeof(PlayerAvatar), "upgradeDeathHeadBattery").SetValue(playerAvatar, (float)newLevel);
+        }
+
+        /*
+         * Sets map player count to given level for the local player
+         * 
+         * @param newLevel - new level to set
+         */
+        public static void UpdatePlayerMapPlayerCount(int newLevel)
+        {
+            PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
+
+            StatsManager.instance.playerUpgradeMapPlayerCount[GetLocalSteamID()] = newLevel;
+
+            AccessTools.Field(typeof(PlayerAvatar), "upgradeMapPlayerCount").SetValue(playerAvatar, newLevel);
+        }
+
+        /*
+         * Sets sprint speed to given level for the local player
+         * 
+         * @param newLevel - new level to set
+         */
+        public static void UpdatePlayerSpeed(int newLevel)
+        {
+            PlayerController playerController = GetLocalPlayerController();
+
+            StatsManager.instance.playerUpgradeSpeed[GetLocalSteamID()] = newLevel;
+
+            AccessTools.Field(typeof(PlayerController), "SprintSpeed").SetValue(playerController, STARTING_SPEED + newLevel);
+            AccessTools.Field(typeof(PlayerController), "SprintSpeedUpgrades").SetValue(playerController, (float)newLevel);
+            AccessTools.Field(typeof(PlayerController), "playerOriginalSprintSpeed").SetValue(playerController, STARTING_SPEED + newLevel);
+        }
+
+        /*
+         * Sets strength to given level for the local player
+         * 
+         * @param newLevel - new level to set
+         */
+        public static void UpdatePlayerStrength(int newLevel)
+        {
+            PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
+
+            StatsManager.instance.playerUpgradeStrength[GetLocalSteamID()] = newLevel;
+
+            AccessTools.Field(typeof(PhysGrabber), "grabStrength").SetValue(AccessTools.Field(typeof(PlayerAvatar), "physGrabber").GetValue(playerAvatar), STARTING_STRENGTH + (newLevel * STRENGTH_INCREMENT));
+        }
+
+        /*
+         * Sets grab range to given level for the local player
+         * 
+         * @param newLevel - new level to set
+         */
+        public static void UpdatePlayerRange(int newLevel)
+        {
+            PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
+
+            StatsManager.instance.playerUpgradeRange[GetLocalSteamID()] = newLevel;
+
+            AccessTools.Field(typeof(PhysGrabber), "grabRange").SetValue(AccessTools.Field(typeof(PlayerAvatar), "physGrabber").GetValue(playerAvatar), STARTING_RANGE + newLevel);
+        }
+
+        /*
+         * Sets throw strength to given level for the local player (TODO: figure out what this is)
+         * 
+         * @param newLevel - new level to set
+         */
+        public static void UpdatePlayerThrow(int newLevel)
+        {
+            PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
+
+            StatsManager.instance.playerUpgradeThrow[GetLocalSteamID()] = newLevel;
+
+            AccessTools.Field(typeof(PhysGrabber), "throwStrength").SetValue(AccessTools.Field(typeof(PlayerAvatar), "physGrabber").GetValue(playerAvatar), newLevel * THROW_INCREMENT);
+        }
+
+        /*
+         * Sets crouch rest to given level for the local player
+         * 
+         * @param newLevel - new level to set
+         */
+        public static void UpdatePlayerCrouchRest(int newLevel)
+        {
+            PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
+
+            StatsManager.instance.playerUpgradeCrouchRest[GetLocalSteamID()] = newLevel;
+
+            AccessTools.Field(typeof(PlayerAvatar), "upgradeCrouchRest").SetValue(playerAvatar, (float)newLevel);
+        }
+
+        /*
+         * Sets tumble wings to given level for the local player
+         * 
+         * @param newLevel - new level to set
+         */
+        public static void UpdatePlayerTumbleWings(int newLevel)
+        {
+            PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
+
+            StatsManager.instance.playerUpgradeTumbleWings[GetLocalSteamID()] = newLevel;
+
+            AccessTools.Field(typeof(PlayerAvatar), "upgradeTumbleWings").SetValue(playerAvatar, (float)newLevel);
+        }
+
     }
 }

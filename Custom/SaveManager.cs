@@ -58,6 +58,9 @@ namespace SkillFern.Custom
 
                 Plugin.LogInfo($"Created new save data at {fullPath}");
             }
+
+            // sync the skill data
+            SkillNetworkSync.SyncAll();
         }
 
     }
