@@ -1,7 +1,7 @@
 ﻿/*
  * SkillDataManager.cs
  * 
- * Holds and manages all current skill data of all players
+ * Holds and manages all current skill and fern data of all players
  */
 
 using SkillFern.Utilities;

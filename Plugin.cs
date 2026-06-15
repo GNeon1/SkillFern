@@ -7,6 +7,7 @@
 using BepInEx;
 using HarmonyLib;
 using SkillFern.Networking;
+using SkillFern.Utilities;
 using UnityEngine;
 
 namespace SkillFern
@@ -38,6 +39,9 @@ namespace SkillFern
             // start listening for network traffic
             SkillNetworkSync.Initialize();
             LogInfo("Network initialized");
+
+            // load the assets from bundles
+            AssetHelper.LoadBundles();
         }
 
         /*
@@ -53,6 +57,11 @@ namespace SkillFern
         public static void LogInfo(string msg)
         {
             instance.Logger.LogInfo($"Skill Fern: {msg}");
+        }
+
+        public static void LogError(string msg)
+        {
+            instance.Logger.LogError($"Skill Fern: {msg}");
         }
     }
 }

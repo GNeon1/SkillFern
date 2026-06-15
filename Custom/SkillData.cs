@@ -47,6 +47,8 @@ namespace SkillFern.Custom
         public int crouchRestLevels;
         public int tumbleWingsLevels;
 
+        public List<string> ownedNodes; // array of all owned skill node IDs
+
         public SkillData(string steamID) {
             this.steamID = steamID;
             healthLevels = 0;
@@ -62,6 +64,7 @@ namespace SkillFern.Custom
             throwLevels = 0;
             crouchRestLevels = 0;
             tumbleWingsLevels = 0;
+            ownedNodes = new List<string>();
         }
 
     }
