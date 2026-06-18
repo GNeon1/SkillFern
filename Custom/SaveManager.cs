@@ -4,16 +4,15 @@
  * Manages saving and loading utility with JSON files parallel to normal saves
  */
 
-using SkillFern.Networking;
 using System.IO;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace SkillFern.Custom
 {
     public static class SaveManager
     {
-
-        public static SkillDataManager SkillManager = new SkillDataManager(); // skill manager for current game
+        public static string lastFile; // the last file saved to or loaded from
 
         /*
          * Saves current skill data to correct save path
@@ -21,11 +20,13 @@ namespace SkillFern.Custom
          * @param fileName - the name of the save to update (no extension)
          */
         public static void Save(string fileName) {
+            lastFile = fileName; // update last file saved to
+
             string directory = Application.persistentDataPath + "/saves/" + fileName; // normal save directory
             string fullPath = directory + "/" + fileName + "_SkillFern.json";         // full path to the custom save data
 
             // serialize the current skill data into JSON
-            string json = JsonUtility.ToJson(SkillManager, true);
+            string json = JsonConvert.SerializeObject(SkillDataManager.instance, Formatting.Indented);
 
             // write data to file and log success
             File.WriteAllText(fullPath, json);
@@ -38,6 +39,8 @@ namespace SkillFern.Custom
          * @param fileName - the name of the save to load from (no extension)
          */
         public static void Load(string fileName) {
+            lastFile = fileName; // update last file saved to
+
             string directory = Application.persistentDataPath + "/saves/" + fileName; // normal save directory
             string fullPath = directory + "/" + fileName + "_SkillFern.json";         // full path to the custom save data
 
@@ -47,20 +50,15 @@ namespace SkillFern.Custom
                 string json = File.ReadAllText(fullPath);
 
                 // deserialize the data to replace the current data and log success
-                SkillManager = JsonUtility.FromJson<SkillDataManager>(json);
-
-                SkillDataManager.instance = SkillManager;
+                SkillDataManager.instance = JsonConvert.DeserializeObject<SkillDataManager>(json);
 
                 Plugin.LogInfo($"Loaded save data from {fullPath}");
             } else { // otherwise. . .
                 // create new default skill data and log creation
-                SkillManager = new SkillDataManager();
+                SkillDataManager.instance = new SkillDataManager();
 
                 Plugin.LogInfo($"Created new save data at {fullPath}");
             }
-
-            // sync the skill data
-            SkillNetworkSync.SyncAll();
         }
 
     }

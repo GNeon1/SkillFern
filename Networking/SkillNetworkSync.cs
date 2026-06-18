@@ -8,6 +8,7 @@ using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
 using SkillFern.Custom;
+using SkillFern.Utilities;
 using System;
 
 namespace SkillFern.Networking
@@ -15,13 +16,36 @@ namespace SkillFern.Networking
     public static class SkillNetworkSync
     {
         const byte SKILL_DATA_CHANNEL = 187; // photon channel to send skill data on
+        private static bool isInitialized = false; // whether network sync has been initialized
+
+        public static int saveCountdown = -1; // number of point network events left before a forced save
+
+        enum EVENT_TYPE
+        {
+            SKILL_UPDATE = 0,
+            NODE_PURCHASE = 1,
+            POINTS_UPDATE = 2,
+            SKILL_SYNC = 3,
+            POINTS_SYNC = 4,
+            ROUND_SETUP = 5
+        }
 
         /*
-         * Initializes the network sync. Run when plugin is awake
+         * Initializes the network sync. Run when game starts
          */
         public static void Initialize() {
+            if (isInitialized || PhotonNetwork.NetworkingClient == null)
+                return;
+
+            // mark as initialized to prevent multiple initializations
+            isInitialized = true;
+            saveCountdown = -1;
+
             // subscribe to photon events
             PhotonNetwork.NetworkingClient.EventReceived += OnEventReceived;
+
+            // log status
+            Plugin.LogInfo("Network initialized");
         }
 
         public static void OnEventReceived(EventData data) {
@@ -33,11 +57,73 @@ namespace SkillFern.Networking
             object[] payload = (object[])data.CustomData;
             Plugin.LogInfo("Payload: " + payload.ToString());
 
-            string steamID = (string)payload[0];   // steamID of updated player
-            string skillName = (string)payload[1]; // name of skill to update
-            int newLevel = (int)payload[2];        // new level to update the skill to
+            string steamID = (string)payload[1];
 
-            SkillDataManager.instance.UpdateSkill(steamID, skillName, newLevel);
+            switch ((EVENT_TYPE)payload[0])
+            {
+                case EVENT_TYPE.ROUND_SETUP:
+                    if (!PlayerHelper.IsHost() && !GameManager.Multiplayer())
+                        SkillDataManager.instance = new SkillDataManager();
+                    break;
+                case EVENT_TYPE.NODE_PURCHASE:
+                    string nodeID = (string)payload[2];   // ID of the node to purchase
+                    SkillDataManager.instance.PurchaseNode(steamID, nodeID);
+                    break;
+                case EVENT_TYPE.SKILL_UPDATE:
+                case EVENT_TYPE.SKILL_SYNC:
+                    // steamID of updated player
+                    string skillName = (string)payload[2]; // name of skill to update
+                    int newLevel = (int)payload[3];        // new level to update the skill to
+
+                    SkillDataManager.instance.UpdateSkill(steamID, skillName, newLevel, (EVENT_TYPE)payload[0] == EVENT_TYPE.SKILL_SYNC);
+                    break;
+                case EVENT_TYPE.POINTS_UPDATE:
+                case EVENT_TYPE.POINTS_SYNC:
+                    int amount = (int)payload[2];        // amount to update the skill points by
+
+                    SkillDataManager.instance.UpdateSkillPoints(steamID, amount, (EVENT_TYPE)payload[0] == EVENT_TYPE.POINTS_SYNC);
+
+                    // if host, move save countdown
+                    if (saveCountdown > 0 && PlayerHelper.IsHost())
+                    {
+                        saveCountdown--;
+
+                        if (saveCountdown == 0)
+                        {
+                            saveCountdown = -1;
+                            Plugin.LogInfo("Forcing save after skill point updates. . .");
+                            SaveManager.Save(SaveManager.lastFile);
+                        }
+                    }
+                    break;
+            }
+        }
+
+        /*
+         * Updates a player's skill point count
+         * 
+         * @param steamID - steamID of the player to update
+         * @param amount - amount of skill points to award or deduct
+         */
+        public static void UpdateSkillPoints(string steamID, int amount, bool sync = false)
+        {
+            Plugin.LogInfo("   Granting " + amount + " points to " + steamID);
+
+            // if not multiplayer, update locally and return
+            if (!GameManager.Multiplayer())
+            {
+                SkillDataManager.instance.UpdateSkillPoints(steamID, amount);
+                return;
+            }
+
+            // payload containing actual data to send
+            object[] payload = new object[] { sync ? EVENT_TYPE.POINTS_SYNC : EVENT_TYPE.POINTS_UPDATE, steamID, amount };
+
+            // message should go to all players
+            RaiseEventOptions eventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+
+            // send the event on the correct channel with reliable delivery
+            PhotonNetwork.RaiseEvent(SKILL_DATA_CHANNEL, payload, eventOptions, SendOptions.SendReliable);
         }
 
         /*
@@ -47,9 +133,47 @@ namespace SkillFern.Networking
          * @param skillName - name of the skill to update
          * @param newLevel - new value for the skill level
          */
-        public static void UpdateSkill(string steamID, string skillName, int newLevel) {
+        public static void UpdateSkill(string steamID, string skillName, int newLevel, bool sync = false)
+        {
+            // if not multiplayer, update locally and return
+            if (!GameManager.Multiplayer())
+            {
+                SkillDataManager.instance.UpdateSkill(steamID, skillName, newLevel);
+                return;
+            }
+
             // payload containing actual data to send
-            object[] payload = new object[] { steamID, skillName, newLevel };
+            object[] payload = new object[] { sync ? EVENT_TYPE.SKILL_SYNC : EVENT_TYPE.SKILL_UPDATE, steamID, skillName, newLevel };
+
+            // message should go to all players
+            RaiseEventOptions eventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+
+            // send the event on the correct channel with reliable delivery
+            PhotonNetwork.RaiseEvent(SKILL_DATA_CHANNEL, payload, eventOptions, SendOptions.SendReliable);
+        }
+        public static void UpdateSkill(string steamID, SkillData.SKILL_TYPE skillType, int newLevel)
+        {
+            UpdateSkill(steamID, SkillData.SKILL_NAMES[(int)skillType], newLevel);
+        }
+
+        /*
+         * Purchases a node for a given player for all players
+         * 
+         * @param steamID - steamID of the player to update
+         * @param nodeID - ID of the node to purchase
+         */
+        public static void PurchaseNode(string steamID, string nodeID)
+        {
+            // if not multiplayer, update locally and return
+            if (!GameManager.Multiplayer()) {
+                SkillDataManager.instance.PurchaseNode(steamID, nodeID);
+                return;
+            }
+
+            Plugin.LogInfo("Purchasing node " + nodeID + " for " + steamID + " on network.");
+
+            // payload containing actual data to send
+            object[] payload = new object[] { EVENT_TYPE.NODE_PURCHASE, steamID, nodeID };
 
             // message should go to all players
             RaiseEventOptions eventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
@@ -64,12 +188,32 @@ namespace SkillFern.Networking
         public static void SyncAll() {
             Plugin.LogInfo("Syncing all skill data. . .");
 
+            // tell all players to set up
+            PhotonNetwork.RaiseEvent(SKILL_DATA_CHANNEL, new object[] {EVENT_TYPE.ROUND_SETUP, ""}, new RaiseEventOptions { Receivers = ReceiverGroup.All }, SendOptions.SendReliable);
+
             // for each skill data entry
-            foreach (SkillData skillData in SkillDataManager.instance.skillDatas)
+            foreach (SkillData skillData in SkillDataManager.instance.skillDatas) {
+                Plugin.LogInfo("Syncing data for " + skillData.steamID);
+
+                Plugin.LogInfo("Cycling skill datas");
                 // for each skill in the entry
                 foreach (string skill in SkillData.SKILL_NAMES)
                     // sync that skill
-                    SkillNetworkSync.UpdateSkill(skillData.steamID, skill, (int)typeof(SkillData).GetField(skill).GetValue(skillData));
+                    UpdateSkill(skillData.steamID, skill, (int)typeof(SkillData).GetField(skill).GetValue(skillData), true);
+
+                Plugin.LogInfo("Cycling owned nodes");
+                // for each node purchased
+                foreach (string nodeID in skillData.ownedNodes)
+                    // sync that node
+                    PurchaseNode(skillData.steamID, nodeID);
+
+                // sync skill points
+                Plugin.LogInfo("Syncing skill points");
+                UpdateSkillPoints(skillData.steamID, skillData.skillPoints, true);
+
+            }
+
+            Plugin.LogInfo("Skill data synced!");
         }
 
     }

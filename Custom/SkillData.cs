@@ -4,6 +4,7 @@
  * Holds all current skill data of a single player
  */
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,25 @@ namespace SkillFern.Custom
     [Serializable]
     public class SkillData
     {
+
+        // enum of all skill types mapped to SKILL_NAMES
+        public enum SKILL_TYPE
+        {
+            HEALTH = 0,
+            STAMINA = 1,
+            EXTRA_JUMP = 2,
+            LAUNCH = 3,
+            TUMBLE_CLIMB = 4,
+            DEATH_HEAD_BATTERY = 5,
+            MAP_PLAYER_COUNT = 6,
+            SPEED = 7,
+            STRENGTH = 8,
+            RANGE = 9,
+            THROW = 10,
+            CROUCH_REST = 11,
+            TUMBLE_WINGS = 12
+        }
+
         // array of all skill names
         public static string[] SKILL_NAMES = {
             "healthLevels",
@@ -47,7 +67,10 @@ namespace SkillFern.Custom
         public int crouchRestLevels;
         public int tumbleWingsLevels;
 
-        public List<string> ownedNodes; // array of all owned skill node IDs
+        public int skillPoints;
+
+        [JsonProperty("ownedNodes")]
+        public List<string> ownedNodes { get; set; } // array of all owned skill node IDs
 
         public SkillData(string steamID) {
             this.steamID = steamID;
@@ -64,6 +87,13 @@ namespace SkillFern.Custom
             throwLevels = 0;
             crouchRestLevels = 0;
             tumbleWingsLevels = 0;
+            skillPoints = 20;
+            ownedNodes = new List<string>();
+        }
+
+        [JsonConstructor]
+        public SkillData()
+        {
             ownedNodes = new List<string>();
         }
 

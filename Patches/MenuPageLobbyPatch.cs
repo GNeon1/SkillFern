@@ -5,13 +5,33 @@
  */
 
 using HarmonyLib;
+using SkillFern.Custom;
 using SkillFern.Networking;
+using SkillFern.Utilities;
 
 namespace SkillFern.Patches
 {
     [HarmonyPatch(typeof(MenuPageLobby))]
     public class MenuPageLobbyPatch
     {
+
+        /*
+         * AFTER MenuPageLobby.Start
+         * 
+         * Runs when lobby screen is initialized
+         * 
+         * Prepares network functionality
+         */
+        [HarmonyPatch("Start")]
+        [HarmonyPostfix]
+        public static void Start() {
+            // initialize network sync and skill data manager
+            SkillNetworkSync.Initialize();
+
+            // if not host, initialize SkillDataManager
+            if (!PlayerHelper.IsHost())
+                SkillDataManager.instance = new SkillDataManager();
+        }
 
         /*
          * BEFORE MenuPageLobbyPatch.ButtonStart

@@ -5,6 +5,7 @@
  */
 
 using HarmonyLib;
+using SkillFern.Custom;
 using SkillFern.Utilities;
 using UnityEngine;
 

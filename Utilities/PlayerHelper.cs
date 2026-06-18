@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Photon.Pun;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,12 +37,35 @@ namespace SkillFern.Utilities
         }
 
         /*
+         * @returns whether the local player is host of the lobby
+         */
+        public static bool IsHost()
+        {
+            return PhotonNetwork.IsMasterClient;
+        }
+
+        /*
+         * TODO: description
+         */
+        public static List<string> GetAllPlayerSteamIDs() {
+            List<string> allPlayers = new List<string>();
+
+            foreach (PlayerAvatar avatar in SemiFunc.PlayerGetAll())
+                allPlayers.Add((string)AccessTools.Field(typeof(PlayerAvatar), "steamID").GetValue(avatar));
+
+            return allPlayers;
+        }
+
+        /*
          * @returns local PlayerController instance
          */
         public static PlayerController GetLocalPlayerController() {
             return PlayerController.instance;
         }
 
+        /*
+         * @returns player avatar of the local player
+         */
         public static PlayerAvatar GetLocalPlayerAvatar() {
             return PlayerAvatar.instance;
         }
@@ -62,8 +86,6 @@ namespace SkillFern.Utilities
         {
             PlayerController playerController = GetLocalPlayerController();
 
-            StatsManager.instance.playerUpgradeStamina[GetLocalSteamID()] = newLevel;
-
             AccessTools.Field(typeof(PlayerController), "EnergyStart").SetValue(playerController, (float)(STARTING_ENERGY + newLevel * ENERGY_INCREMENT));
             AccessTools.Field(typeof(PlayerController), "EnergyCurrent").SetValue(playerController, playerController.EnergyStart);
         }
@@ -73,11 +95,11 @@ namespace SkillFern.Utilities
          * 
          * @param newLevel - new level to set
          */
-        public static void UpdatePlayerHealth(int newLevel)
+        public static void UpdatePlayerHealth(int newLevel, int oldValue)
         {
             PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
 
-            int levelDifference = StatsManager.instance.playerUpgradeHealth.ContainsKey(GetLocalSteamID()) ? newLevel - StatsManager.instance.playerUpgradeHealth[GetLocalSteamID()] : newLevel;
+            int levelDifference = StatsManager.instance.playerUpgradeHealth.ContainsKey(GetLocalSteamID()) ? newLevel - oldValue : newLevel;
 
             StatsManager.instance.playerUpgradeHealth[GetLocalSteamID()] = newLevel;
 
@@ -98,8 +120,6 @@ namespace SkillFern.Utilities
         {
             PlayerController playerController = GetLocalPlayerController();
 
-            StatsManager.instance.playerUpgradeExtraJump[GetLocalSteamID()] = newLevel;
-
             AccessTools.Field(typeof(PlayerController), "JumpExtra").SetValue(playerController, newLevel);
         }
 
@@ -112,9 +132,11 @@ namespace SkillFern.Utilities
         {
             PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
 
-            StatsManager.instance.playerUpgradeLaunch[GetLocalSteamID()] = newLevel;
+            object tumble = AccessTools.Field(typeof(PlayerAvatar), "tumble").GetValue(playerAvatar);
 
-            AccessTools.Field(typeof(PlayerTumble), "tumbleLaunch").SetValue(AccessTools.Field(typeof(PlayerAvatar), "tumble").GetValue(playerAvatar), newLevel);
+            // only update if tumble object exists
+            if (tumble != null)
+                AccessTools.Field(typeof(PlayerTumble), "tumbleLaunch").SetValue(tumble, newLevel);
         }
 
         /*
@@ -125,8 +147,6 @@ namespace SkillFern.Utilities
         public static void UpdatePlayerTumbleClimb(int newLevel)
         {
             PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
-
-            StatsManager.instance.playerUpgradeTumbleClimb[GetLocalSteamID()] = newLevel;
 
             AccessTools.Field(typeof(PlayerAvatar), "upgradeTumbleClimb").SetValue(playerAvatar, (float)newLevel);
         }
@@ -140,8 +160,6 @@ namespace SkillFern.Utilities
         {
             PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
 
-            StatsManager.instance.playerUpgradeDeathHeadBattery[GetLocalSteamID()] = newLevel;
-
             AccessTools.Field(typeof(PlayerAvatar), "upgradeDeathHeadBattery").SetValue(playerAvatar, (float)newLevel);
         }
 
@@ -154,8 +172,6 @@ namespace SkillFern.Utilities
         {
             PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
 
-            StatsManager.instance.playerUpgradeMapPlayerCount[GetLocalSteamID()] = newLevel;
-
             AccessTools.Field(typeof(PlayerAvatar), "upgradeMapPlayerCount").SetValue(playerAvatar, newLevel);
         }
 
@@ -167,8 +183,6 @@ namespace SkillFern.Utilities
         public static void UpdatePlayerSpeed(int newLevel)
         {
             PlayerController playerController = GetLocalPlayerController();
-
-            StatsManager.instance.playerUpgradeSpeed[GetLocalSteamID()] = newLevel;
 
             AccessTools.Field(typeof(PlayerController), "SprintSpeed").SetValue(playerController, STARTING_SPEED + newLevel);
             AccessTools.Field(typeof(PlayerController), "SprintSpeedUpgrades").SetValue(playerController, (float)newLevel);
@@ -184,8 +198,6 @@ namespace SkillFern.Utilities
         {
             PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
 
-            StatsManager.instance.playerUpgradeStrength[GetLocalSteamID()] = newLevel;
-
             AccessTools.Field(typeof(PhysGrabber), "grabStrength").SetValue(AccessTools.Field(typeof(PlayerAvatar), "physGrabber").GetValue(playerAvatar), STARTING_STRENGTH + (newLevel * STRENGTH_INCREMENT));
         }
 
@@ -197,8 +209,6 @@ namespace SkillFern.Utilities
         public static void UpdatePlayerRange(int newLevel)
         {
             PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
-
-            StatsManager.instance.playerUpgradeRange[GetLocalSteamID()] = newLevel;
 
             AccessTools.Field(typeof(PhysGrabber), "grabRange").SetValue(AccessTools.Field(typeof(PlayerAvatar), "physGrabber").GetValue(playerAvatar), STARTING_RANGE + newLevel);
         }
@@ -212,8 +222,6 @@ namespace SkillFern.Utilities
         {
             PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
 
-            StatsManager.instance.playerUpgradeThrow[GetLocalSteamID()] = newLevel;
-
             AccessTools.Field(typeof(PhysGrabber), "throwStrength").SetValue(AccessTools.Field(typeof(PlayerAvatar), "physGrabber").GetValue(playerAvatar), newLevel * THROW_INCREMENT);
         }
 
@@ -226,8 +234,6 @@ namespace SkillFern.Utilities
         {
             PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
 
-            StatsManager.instance.playerUpgradeCrouchRest[GetLocalSteamID()] = newLevel;
-
             AccessTools.Field(typeof(PlayerAvatar), "upgradeCrouchRest").SetValue(playerAvatar, (float)newLevel);
         }
 
@@ -239,8 +245,6 @@ namespace SkillFern.Utilities
         public static void UpdatePlayerTumbleWings(int newLevel)
         {
             PlayerAvatar playerAvatar = GetLocalPlayerAvatar();
-
-            StatsManager.instance.playerUpgradeTumbleWings[GetLocalSteamID()] = newLevel;
 
             AccessTools.Field(typeof(PlayerAvatar), "upgradeTumbleWings").SetValue(playerAvatar, (float)newLevel);
         }

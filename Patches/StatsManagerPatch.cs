@@ -42,18 +42,5 @@ namespace SkillFern.Patches
             SaveManager.Load(fileName);
         }
 
-        /*
-         * AFTER StatsManager.Awake
-         * 
-         * Initializes everything for the skill system at the game launch
-         */
-        [HarmonyPatch("Awake")]
-        [HarmonyPostfix]
-        static void RunSetup()
-        {
-            // initialize the SkillDataManager to ensure one exists
-            SkillDataManager.Initialize();
-        }
-
     }
 }

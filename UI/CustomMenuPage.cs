@@ -13,8 +13,9 @@ namespace SkillFern.UI
     {
         [HideInInspector]
         public static CustomMenuPage instance; // a static instance of this page
-
+        [HideInInspector]
         public int customPageIndex; // a custom page index for this menu. Must be >= 22 (the number of original indices)
+        [HideInInspector]
         public MenuPage menuPage; // the menu page component of this page
 
         /*

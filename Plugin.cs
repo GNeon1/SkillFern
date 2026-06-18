@@ -6,6 +6,7 @@
 
 using BepInEx;
 using HarmonyLib;
+using SkillFern.Custom;
 using SkillFern.Networking;
 using SkillFern.Utilities;
 using UnityEngine;
@@ -36,22 +37,8 @@ namespace SkillFern
             harmony.PatchAll();
             LogInfo("Patches loaded");
 
-            // start listening for network traffic
-            SkillNetworkSync.Initialize();
-            LogInfo("Network initialized");
-
             // load the assets from bundles
             AssetHelper.LoadBundles();
-        }
-
-        /*
-         * Unpatch when a hot-reload goes through
-         */
-        private void OnDestroy()
-        {
-            Logger.LogInfo("Skill Fern unloading. Cleaning up patches...");
-
-            harmony?.UnpatchSelf();
         }
 
         public static void LogInfo(string msg)
