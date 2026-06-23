@@ -5,6 +5,7 @@
  */
 
 using SkillFern.Custom;
+using SkillFern.Networking;
 
 namespace SkillFern.Utilities
 {
@@ -27,6 +28,15 @@ namespace SkillFern.Utilities
                 Plugin.LogInfo("-- Trying " + skillName);
                 SkillDataManager.instance.UpdateSkill(SkillFern.Utilities.PlayerHelper.GetLocalSteamID(), skillName, 2);
             }
+        }
+
+        /*
+         * Awards skill points to the local player
+         * 
+         * @param points - number of points to award
+         */
+        public static void AwardPoints(int points) {
+            SkillNetworkSync.UpdateSkillPoints(PlayerHelper.GetLocalSteamID(), points);
         }
     }
 }

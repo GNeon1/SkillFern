@@ -24,17 +24,15 @@ namespace SkillFern.Patches
         [HarmonyPostfix]
         static void AwardSkillPoints()
         {
+            // if the player is not the host, they do not assign points
             if (!PlayerHelper.IsHost())
                 return;
 
-            SkillNetworkSync.saveCountdown = 0;
-
+            // award points per player
             Plugin.LogInfo("Awarding points. . .");
-            foreach (string id in PlayerHelper.GetAllPlayerSteamIDs())
-            {
-                SkillNetworkSync.saveCountdown += 1;
-                SkillNetworkSync.UpdateSkillPoints(id, 2);
-            }
+            SkillNetworkSync.AwardSkillPointsForLevel();
+
+            
         }
 
     }

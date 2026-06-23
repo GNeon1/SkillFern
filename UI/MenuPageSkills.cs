@@ -25,8 +25,16 @@ namespace SkillFern.UI
             for (int i = lineContainer.transform.childCount - 1; i >= 0; i--)
                 DestroyImmediate(lineContainer.transform.GetChild(i).gameObject);
 
+            List<string> ids = new List<string>();
+
             foreach (FernNode node in GetComponentsInChildren<FernNode>())
+            {
                 node.DrawLines(lineContainer, lineThickness);
+                /*if (ids.Contains(node.nodeID))
+                    Debug.Log("Duplicate ID " + node.nodeID + " on " + node.gameObject.name);
+                else
+                    ids.Add(node.nodeID);*/
+            }
         }
 
 
@@ -36,6 +44,7 @@ namespace SkillFern.UI
         public static int CUSTOM_PAGE_INDEX = 23;
 
         private List<FernNode> nodes; // list of all nodes in the fern
+        private HoverText hoverText; // text to display current hover text TODO: make a script
 
         /*
          * set custom page index to 23 and initialize nodes
@@ -45,11 +54,16 @@ namespace SkillFern.UI
             this.customPageIndex = CUSTOM_PAGE_INDEX;
             base.Start();
 
+            // find the hovertext
+            hoverText = GetComponentInChildren<HoverText>();
+
+            // update the skill point count
             skillPointsText.SetText("Points: " + SkillDataManager.instance.GetLocalSkillPoints());
 
             // automatically find all nodes
             nodes = new List<FernNode>(GetComponentsInChildren<FernNode>());
 
+            // draw lines for each node
             DrawLines();
 
             // pull local node purchases and initialize each node
@@ -98,5 +112,23 @@ namespace SkillFern.UI
             MenuManager.instance.PageCloseAll();
             MenuManager.instance.PageOpen(MenuPageIndex.Escape, false);
         }
+
+        /*
+         * Clears/hides the hover text
+         */
+        public void ClearHoverText()
+        {
+            hoverText.Clear();
+        }
+
+        /*
+         * Updates current hover text
+         * 
+         * @param text - what to update the text to
+         */
+        public void SetHoverText(string text) {
+            hoverText.SetText(text);
+        }
+
     }
 }

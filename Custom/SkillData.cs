@@ -35,6 +35,23 @@ namespace SkillFern.Custom
             TUMBLE_WINGS = 12
         }
 
+        public static string[] SKILL_DISPLAY_NAMES =
+        {
+            "Health",
+            "Stamina",
+            "Extra Jump",
+            "Tumble Launch",
+            "Tumble Climb",
+            "Death Battery",
+            "Player Count",
+            "Speed",
+            "Strength",
+            "Range",
+            "Throw",
+            "Crouch Rest",
+            "Tumble Wings"
+        };
+
         // array of all skill names
         public static string[] SKILL_NAMES = {
             "healthLevels",
@@ -87,7 +104,7 @@ namespace SkillFern.Custom
             throwLevels = 0;
             crouchRestLevels = 0;
             tumbleWingsLevels = 0;
-            skillPoints = 20;
+            skillPoints = 0;
             ownedNodes = new List<string>();
         }
 

@@ -130,8 +130,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Patches\MenuPageSavesPatch.cs" />
+    <Compile Include="Patches\RunManagerPatch.cs" />
     <Compile Include="Patches\ResultScreenUIPatch.cs" />
+    <Compile Include="UI\HoverText.cs" />
     <Compile Include="UI\UpgradeNode.cs" />
     <Compile Include="UI\FernNode.cs" />
     <Compile Include="Custom\SaveManager.cs" />

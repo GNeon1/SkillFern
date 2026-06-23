@@ -5,6 +5,7 @@
  * Must be attached to each node UI element
  */
 
+using HarmonyLib;
 using SkillFern.Custom;
 using SkillFern.Networking;
 using SkillFern.Utilities;
@@ -35,6 +36,8 @@ namespace SkillFern.UI
 
         protected bool owned; // whether this node has been purchased yet
         protected MenuButton button; // the button attached to this object
+
+        protected bool wasHovering; // whether the mouse was hovering over this node last update (for clearing hover text)
 
         private MenuPageSkills skillsPage; // parent skills page
 
@@ -93,17 +96,41 @@ namespace SkillFern.UI
 
         }
 
+        public void OnValidate() {
+            costText.SetText("" + cost);
+        }
+
         /*
          * Assign a unique ID to this node in editor
          */
         public void Reset() {
+            cost = 1;
             nodeID = System.Guid.NewGuid().ToString();
             targetImage = transform.GetChild(0).GetComponent<Image>();
+            dependencies = new FernNode[1];
+            costText = transform.GetChild(2).GetComponent<TextMeshProUGUI>();
+            costText.SetText("" + cost);
         }
 
         public void Awake() {
             button = GetComponent<MenuButton>();
             skillsPage = GetComponentInParent<MenuPageSkills>();
+        }
+
+        /*
+         * Manage hover behavior on update
+         */
+        public void Update() {
+            // if hovering, tell skills page to show display string
+            if ((int)AccessTools.Field(typeof(MenuButton), "buttonState").GetValue(button) <= 1 && !owned)
+            {
+                wasHovering = true;
+                skillsPage.SetHoverText(GetDisplayString());
+            } else if (wasHovering) // if cleanup is needed, clear the hover text
+            {
+                wasHovering = false;
+                skillsPage.ClearHoverText();
+            }
         }
 
         /*
@@ -187,5 +214,10 @@ namespace SkillFern.UI
                     line.lineObject.GetComponent<Image>().color = Color.gray;
             }
         }
+
+        /*
+         * @returns hover text to display for this node
+         */
+        public virtual string GetDisplayString() { return "[BLANK]"; }
     }
 }

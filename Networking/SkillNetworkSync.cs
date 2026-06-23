@@ -62,6 +62,7 @@ namespace SkillFern.Networking
             switch ((EVENT_TYPE)payload[0])
             {
                 case EVENT_TYPE.ROUND_SETUP:
+                    Plugin.LogInfo("ROUND SETUP");
                     if (!PlayerHelper.IsHost() && !GameManager.Multiplayer())
                         SkillDataManager.instance = new SkillDataManager();
                     break;
@@ -183,13 +184,28 @@ namespace SkillFern.Networking
         }
 
         /*
+         * Awards skill points to all players for the completed level
+         */
+        public static void AwardSkillPointsForLevel()
+        {
+            // reset the sync countdown
+            saveCountdown = 0;
+
+            // cycle through each player and award points
+            foreach (string id in PlayerHelper.GetAllPlayerSteamIDs())
+            {
+                SkillNetworkSync.saveCountdown += 1;
+
+                int pointsEarned = SkillDataManager.CalculatePointsEarned();
+                UpdateSkillPoints(id, pointsEarned);
+            }
+        }
+
+        /*
          * Syncs every skill between all players
          */
         public static void SyncAll() {
             Plugin.LogInfo("Syncing all skill data. . .");
-
-            // tell all players to set up
-            PhotonNetwork.RaiseEvent(SKILL_DATA_CHANNEL, new object[] {EVENT_TYPE.ROUND_SETUP, ""}, new RaiseEventOptions { Receivers = ReceiverGroup.All }, SendOptions.SendReliable);
 
             // for each skill data entry
             foreach (SkillData skillData in SkillDataManager.instance.skillDatas) {

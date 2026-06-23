@@ -53,7 +53,11 @@ namespace SkillFern.Custom
                 SkillDataManager.instance = JsonConvert.DeserializeObject<SkillDataManager>(json);
 
                 Plugin.LogInfo($"Loaded save data from {fullPath}");
-            } else { // otherwise. . .
+            }
+            else
+            { // otherwise. . .
+                Plugin.LogInfo("SAVE DOESN T EXIST");
+
                 // create new default skill data and log creation
                 SkillDataManager.instance = new SkillDataManager();
 

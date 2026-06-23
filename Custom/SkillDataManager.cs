@@ -4,6 +4,7 @@
  * Holds and manages all current skill and fern data of all players
  */
 
+using HarmonyLib;
 using Newtonsoft.Json;
 using SkillFern.Utilities;
 using System;
@@ -37,6 +38,14 @@ namespace SkillFern.Custom
         {
             if (SkillDataManager.instance == null)
                 SkillDataManager.instance = new SkillDataManager();
+        }
+
+        /* @param offset - how many levels to offset the calculation by
+         * 
+         * @returns how many skill points each player earns for this level
+         */
+        public static int CalculatePointsEarned(int offset = 0) {
+            return 2 + RunManager.instance.CalculateMoonLevel(SemiFunc.RunGetLevelsCompleted() - 1 + offset);
         }
 
         /* @returns number of skill points held by local player
@@ -250,7 +259,14 @@ namespace SkillFern.Custom
             switch (skillName)
             {
                 case "healthLevels":
+                    // find the old value of health for this player
                     oldValue = StatsManager.instance.playerUpgradeHealth.ContainsKey(steamID) ? StatsManager.instance.playerUpgradeHealth[steamID] : 0;
+
+                    // find the player's current health and update it based on the level difference
+                    PlayerAvatar playerAvatar = SemiFunc.PlayerAvatarGetFromSteamID(steamID);
+                    int currentHealth = (int)AccessTools.Field(typeof(PlayerHealth), "health").GetValue(playerAvatar.playerHealth);
+                    StatsManager.instance.SetPlayerHealth(steamID, currentHealth + (newLevel - oldValue) * PlayerHelper.HEALTH_INCREMENT, true);
+
                     StatsManager.instance.playerUpgradeHealth[steamID] = newLevel;
                     break;
                 case "staminaLevels":

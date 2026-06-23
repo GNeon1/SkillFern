@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace SkillFern.Utilities
 {
@@ -15,7 +16,7 @@ namespace SkillFern.Utilities
         const int ENERGY_INCREMENT = 10; // amount energy increases per level (TODO: autodetect)
 
         const int STARTING_HEALTH = 100; // base health level for players (TODO: autodetect)
-        const int HEALTH_INCREMENT = 20; // amount health increases per level (TODO: autodetect)
+        public const int HEALTH_INCREMENT = 20; // amount health increases per level (TODO: autodetect)
 
         const float STARTING_SPEED = 5f; // base speed level for players (TODO: autodetect)
 
@@ -104,11 +105,19 @@ namespace SkillFern.Utilities
             StatsManager.instance.playerUpgradeHealth[GetLocalSteamID()] = newLevel;
 
             AccessTools.Field(typeof(PlayerHealth), "maxHealth").SetValue(playerAvatar.playerHealth, (int)(STARTING_HEALTH + newLevel * HEALTH_INCREMENT));
-            
-            if (levelDifference > 0)
-                playerAvatar.playerHealth.Heal(levelDifference * HEALTH_INCREMENT);
-            else if (levelDifference < 0)
-                playerAvatar.playerHealth.Hurt(-levelDifference * HEALTH_INCREMENT, true);
+
+            int maxHealth = (int)AccessTools.Field(typeof(PlayerHealth), "maxHealth").GetValue(playerAvatar.playerHealth);
+            int currentHealth = (int)AccessTools.Field(typeof(PlayerHealth), "health").GetValue(playerAvatar.playerHealth);
+
+            if (levelDifference != 0)
+            {
+                CameraGlitch.Instance.PlayShortHeal();
+                AccessTools.Field(typeof(PlayerHealth), "health").SetValue(playerAvatar.playerHealth, currentHealth + levelDifference * HEALTH_INCREMENT);
+                if (GameManager.Multiplayer())
+                {
+                    playerAvatar.photonView.RPC("UpdateHealthRPC", RpcTarget.Others, new object[] { maxHealth, currentHealth + levelDifference * HEALTH_INCREMENT, true, false });
+                }
+            }
         }
 
         /*

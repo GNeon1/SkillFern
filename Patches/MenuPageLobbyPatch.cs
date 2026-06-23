@@ -25,6 +25,8 @@ namespace SkillFern.Patches
         [HarmonyPatch("Start")]
         [HarmonyPostfix]
         public static void Start() {
+            Plugin.LogInfo("LOBBY PAGE START");
+
             // initialize network sync and skill data manager
             SkillNetworkSync.Initialize();
 
