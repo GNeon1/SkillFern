@@ -40,7 +40,7 @@ namespace SkillFern.Patches
             string text = "Earn " + SkillDataManager.CalculatePointsEarned(1) + " skill points per level.";
 
             foreach (Moon.MoonAttribute att in __result)
-                if (att.text == text)
+                if (att.LocalizedText == null)
                     return;
 
             __result.Add(new Moon.MoonAttribute()

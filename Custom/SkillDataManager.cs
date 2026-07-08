@@ -6,6 +6,7 @@
 
 using HarmonyLib;
 using Newtonsoft.Json;
+using SkillFern.Networking;
 using SkillFern.Utilities;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,10 @@ namespace SkillFern.Custom
         [JsonProperty("skillDatas")]
         public List<SkillData> skillDatas { get; set; } // list of skill data objects for each player
 
+        public int careerPoints; // total number of skill points earned this run
+        public int moonSkillPoints; // how many skill points to earn per moon phase (for UI only)
+        public int baseSkillPoints; // how many skill points to earn per level (for UI only)
+
         /*
          * Default constructor intializes variables (CALLED BY NEWTONSOFT. DO NOT INITIALIZE INSTANCE)
          */
@@ -32,6 +37,9 @@ namespace SkillFern.Custom
             Plugin.LogInfo("NEW SKILLDATAMANAGER CREATED ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             // create an empty list for skill data
             skillDatas = new List<SkillData>();
+            careerPoints = ConfigHelper.StartingSkillPoints();
+            moonSkillPoints = ConfigHelper.MoonSkillPoints();
+            baseSkillPoints = ConfigHelper.BaseSkillPointsEarned();
         }
 
         public static void Initialize()
@@ -45,13 +53,20 @@ namespace SkillFern.Custom
          * @returns how many skill points each player earns for this level
          */
         public static int CalculatePointsEarned(int offset = 0) {
-            return 2 + RunManager.instance.CalculateMoonLevel(SemiFunc.RunGetLevelsCompleted() - 1 + offset);
+            return SkillDataManager.instance.baseSkillPoints + RunManager.instance.CalculateMoonLevel(SemiFunc.RunGetLevelsCompleted() - 1 + offset) * SkillDataManager.instance.moonSkillPoints;
         }
 
         /* @returns number of skill points held by local player
          */
         public int GetLocalSkillPoints() {
             return GetPlayerData(PlayerHelper.GetLocalSteamID()).skillPoints;
+        }
+
+        /* @returns local player's data
+         */
+        public SkillData GetLocalPlayerData()
+        {
+            return GetPlayerData(PlayerHelper.GetLocalSteamID());
         }
 
         /*
@@ -101,9 +116,22 @@ namespace SkillFern.Custom
             }
 
             if (syncing)
+            {
+                if (playerData.pointsGained == 0)
+                    playerData.pointsGained = amount;
                 playerData.skillPoints = amount;
+            }
             else
+            {
+                if (amount > 0)
+                {
+                    if (steamID == PlayerHelper.GetLocalSteamID())
+                        careerPoints += amount;
+                    playerData.pointsGained += amount;
+                }
+
                 playerData.skillPoints += amount;
+            }
 
             Plugin.LogInfo(steamID + " now has " + playerData.skillPoints + " points");
         }
@@ -307,6 +335,26 @@ namespace SkillFern.Custom
                     break;
             }
             return oldValue;
+        }
+
+        /*
+         * Syncs a player's number of points with the total they should have earned (for late joiners)
+         * 
+         * @param correctPoints - the correct number of points to have gained this run in total
+         * @param ownedPoints - how many points this player actually owns
+         */
+        public void ReconcileCareer(int correctPoints, int ownedPoints) {
+            // update owned points
+            if (GetLocalPlayerData() != null)
+                GetLocalPlayerData().pointsGained = ownedPoints;
+            careerPoints = ownedPoints;
+
+            // calculate the point difference
+            int difference = correctPoints - ownedPoints;
+
+            // if the difference is not zero, update points over network
+            if (difference > 0)
+                SkillNetworkSync.UpdateSkillPoints(PlayerHelper.GetLocalSteamID(), difference);
         }
 
     }

@@ -150,6 +150,7 @@
     <Compile Include="UI\MenuPageSkills.cs" />
     <Compile Include="UI\SkillsButton.cs" />
     <Compile Include="Utilities\AssetHelper.cs" />
+    <Compile Include="Utilities\ConfigHelper.cs" />
     <Compile Include="Utilities\DebugHelper.cs" />
     <Compile Include="Utilities\PlayerHelper.cs" />
   </ItemGroup>

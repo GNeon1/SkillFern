@@ -40,17 +40,23 @@ namespace SkillFern
             // load the assets from bundles
             AssetHelper.LoadBundles();
 
-            Plugin.LogInfo("Newest 2");
+            // setup configuration
+            LogInfo("Setting up configuration. . .");
+            ConfigHelper.Initialize(Config);
+
+            Plugin.LogInfo("Newest 9");
         }
 
         public static void LogInfo(string msg)
         {
-            instance.Logger.LogInfo($"Skill Fern: {msg}");
+            if (ConfigHelper.EnableDebug())
+                instance.Logger.LogInfo($"Skill Fern: {msg}");
         }
 
         public static void LogError(string msg)
         {
-            instance.Logger.LogError($"Skill Fern: {msg}");
+            if (ConfigHelper.EnableDebug())
+                instance.Logger.LogError($"Skill Fern: {msg}");
         }
     }
 }

@@ -9,7 +9,9 @@ using Photon.Pun;
 using Photon.Realtime;
 using SkillFern.Custom;
 using SkillFern.Utilities;
+using Steamworks;
 using System;
+using System.Collections.Generic;
 
 namespace SkillFern.Networking
 {
@@ -27,7 +29,8 @@ namespace SkillFern.Networking
             POINTS_UPDATE = 2,
             SKILL_SYNC = 3,
             POINTS_SYNC = 4,
-            ROUND_SETUP = 5
+            CAREER_SYNC = 5,
+            CONFIG_SYNC = 6
         }
 
         /*
@@ -61,10 +64,19 @@ namespace SkillFern.Networking
 
             switch ((EVENT_TYPE)payload[0])
             {
-                case EVENT_TYPE.ROUND_SETUP:
-                    Plugin.LogInfo("ROUND SETUP");
-                    if (!PlayerHelper.IsHost() && !GameManager.Multiplayer())
-                        SkillDataManager.instance = new SkillDataManager();
+                case EVENT_TYPE.CONFIG_SYNC:
+                    int moonSkillPoints = (int)payload[2]; // amount of skill points to earn per moon phase (for UI)
+                    int baseSkillPoints = (int)payload[3]; // amount of skill points to earn per level (for UI)
+
+                    SkillDataManager.instance.moonSkillPoints = moonSkillPoints;
+                    SkillDataManager.instance.baseSkillPoints = baseSkillPoints;
+                    return;
+                case EVENT_TYPE.CAREER_SYNC:
+                    int careerPoints = (int)payload[2]; // amount of career points expected
+                    int pointsEarned = (int)payload[3]; // amount of points actually owned
+
+                    if (steamID == PlayerHelper.GetLocalSteamID())
+                        SkillDataManager.instance.ReconcileCareer(careerPoints, pointsEarned);
                     break;
                 case EVENT_TYPE.NODE_PURCHASE:
                     string nodeID = (string)payload[2];   // ID of the node to purchase
@@ -207,8 +219,17 @@ namespace SkillFern.Networking
         public static void SyncAll() {
             Plugin.LogInfo("Syncing all skill data. . .");
 
+            List<string> idsSynced = new List<string>();
+            List<string> idsInGame = PlayerHelper.GetAllPlayerSteamIDs();
+
             // for each skill data entry
             foreach (SkillData skillData in SkillDataManager.instance.skillDatas) {
+                if (!idsInGame.Contains(skillData.steamID))
+                {
+                    Plugin.LogInfo("Skipping " + skillData.steamID + " who is not in this game.");
+                    continue;
+                }
+
                 Plugin.LogInfo("Syncing data for " + skillData.steamID);
 
                 Plugin.LogInfo("Cycling skill datas");
@@ -227,9 +248,62 @@ namespace SkillFern.Networking
                 Plugin.LogInfo("Syncing skill points");
                 UpdateSkillPoints(skillData.steamID, skillData.skillPoints, true);
 
+                // reconcile career if fair points is enabled
+                if (ConfigHelper.FairDistribution())
+                {
+                    Plugin.LogInfo("Reconciling career");
+
+                    // payload containing actual data to send
+                    object[] payload1 = new object[] { EVENT_TYPE.CAREER_SYNC, skillData.steamID, SkillDataManager.instance.careerPoints, skillData.pointsGained };
+
+                    // message should go to all players
+                    RaiseEventOptions eventOptions1 = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+
+                    // send the event on the correct channel with reliable delivery
+                    PhotonNetwork.RaiseEvent(SKILL_DATA_CHANNEL, payload1, eventOptions1, SendOptions.SendReliable);
+                }
+
+                idsSynced.Add(skillData.steamID);
+            }
+
+            int diff = idsInGame.Count - idsSynced.Count;
+            if (diff > 0)
+                Plugin.LogInfo("Creating new skill data for " + diff + " new players.");
+
+            // cycle through all players without a skill data
+            foreach (string id in idsInGame)
+            {
+                if (idsSynced.Contains(id))
+                    continue;
+
+                // if fair distribution is on, start them with the career points
+                if (ConfigHelper.FairDistribution())
+                {
+                    Plugin.LogInfo("Starting " + id + " with " + SkillDataManager.instance.careerPoints + " points.");
+                    UpdateSkillPoints(id, SkillDataManager.instance.careerPoints, true);
+                }
+                else
+                { // otherwise, start them with the host's starting points
+                    Plugin.LogInfo("Starting " + id + " with " + ConfigHelper.StartingSkillPoints() + " points.");
+                    UpdateSkillPoints(id, ConfigHelper.StartingSkillPoints(), true);
+                }
             }
 
             Plugin.LogInfo("Skill data synced!");
+
+            Plugin.LogInfo("Syncing moon phase data. . .");
+
+            // sync skill points per moon phase to all players
+
+            // payload containing actual data to send
+            object[] payload = new object[] { EVENT_TYPE.CONFIG_SYNC, PlayerHelper.GetLocalSteamID(), ConfigHelper.MoonSkillPoints(), ConfigHelper.BaseSkillPointsEarned()};
+
+            // message should go to all players
+            RaiseEventOptions eventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+
+            // send the event on the correct channel with reliable delivery
+            PhotonNetwork.RaiseEvent(SKILL_DATA_CHANNEL, payload, eventOptions, SendOptions.SendReliable);
+
         }
 
     }

@@ -5,6 +5,7 @@
  */
 
 using Newtonsoft.Json;
+using SkillFern.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -85,6 +86,7 @@ namespace SkillFern.Custom
         public int tumbleWingsLevels;
 
         public int skillPoints;
+        public int pointsGained;
 
         [JsonProperty("ownedNodes")]
         public List<string> ownedNodes { get; set; } // array of all owned skill node IDs
@@ -104,8 +106,10 @@ namespace SkillFern.Custom
             throwLevels = 0;
             crouchRestLevels = 0;
             tumbleWingsLevels = 0;
-            skillPoints = 0;
+            skillPoints = ConfigHelper.StartingSkillPoints();
             ownedNodes = new List<string>();
+
+            pointsGained = ConfigHelper.StartingSkillPoints();
         }
 
         [JsonConstructor]

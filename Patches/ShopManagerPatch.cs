@@ -5,6 +5,7 @@
  */
 
 using HarmonyLib;
+using SkillFern.Utilities;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -21,8 +22,9 @@ namespace SkillFern.Patches
         [HarmonyPatch("GetAllItemsFromStatsManager")]
         [HarmonyPostfix]
         static void RemoveItemUpgrades(ref List<Item> ___potentialItemUpgrades) {
-            // clear the pool of upgrades to draw from
-            ___potentialItemUpgrades.Clear();
+            // clear the pool of upgrades to draw from (if enabled in config)
+            if (ConfigHelper.ShopUpgradesDisabled())
+                ___potentialItemUpgrades.Clear();
         }
 
     }
