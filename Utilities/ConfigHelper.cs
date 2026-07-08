@@ -27,7 +27,7 @@ namespace SkillFern.Utilities
         public static int MoonSkillPoints() { return moonSkillPoints.Value; }
 
         private static ConfigEntry<bool> enableDebug;
-        public static bool EnableDebug() { return enableDebug.Value; }
+        public static bool EnableDebug() { return enableDebug == null || enableDebug.Value; }
 
         /*
          * Initialize all config values

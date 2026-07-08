@@ -30,6 +30,9 @@ namespace SkillFern
             // instantiate Harmony
             harmony = new Harmony("com.dajadeninja.repo.skillfern");
 
+            instance.Logger.LogInfo("Setting up configuration. . .");
+            ConfigHelper.Initialize(Config);
+
             // announce success and next step
             LogInfo("Loaded successfully! Loading patches. . .");
 
@@ -41,8 +44,7 @@ namespace SkillFern
             AssetHelper.LoadBundles();
 
             // setup configuration
-            LogInfo("Setting up configuration. . .");
-            ConfigHelper.Initialize(Config);
+            
 
             Plugin.LogInfo("Newest 9");
         }
