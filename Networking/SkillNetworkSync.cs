@@ -200,6 +200,15 @@ namespace SkillFern.Networking
          */
         public static void AwardSkillPointsForLevel()
         {
+            // if singleplayer, just update this player
+            if (!GameManager.Multiplayer())
+            {
+                int pointsEarned = SkillDataManager.CalculatePointsEarned();
+                SkillDataManager.instance.UpdateSkillPoints(PlayerHelper.GetLocalSteamID(), pointsEarned);
+                SaveManager.Save(SaveManager.lastFile);
+                return;
+            }
+
             // reset the sync countdown
             saveCountdown = 0;
 
@@ -217,6 +226,9 @@ namespace SkillFern.Networking
          * Syncs every skill between all players
          */
         public static void SyncAll() {
+            if (!GameManager.Multiplayer())
+                return;
+
             Plugin.LogInfo("Syncing all skill data. . .");
 
             List<string> idsSynced = new List<string>();

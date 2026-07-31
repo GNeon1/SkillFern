@@ -24,6 +24,13 @@ namespace SkillFern.Patches
         [HarmonyPostfix]
         static void AwardSkillPoints()
         {
+            if(!GameManager.Multiplayer())
+            {
+                Plugin.LogInfo("Awarding points. . .");
+                SkillNetworkSync.AwardSkillPointsForLevel();
+                return;
+            }
+
             // if the player is not the host, they do not assign points
             if (!PlayerHelper.IsHost())
                 return;

@@ -46,7 +46,7 @@ namespace SkillFern
             // setup configuration
             
 
-            Plugin.LogInfo("Newest 9");
+            Plugin.LogInfo("Newest 11");
         }
 
         public static void LogInfo(string msg)
