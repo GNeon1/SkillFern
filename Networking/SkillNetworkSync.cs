@@ -21,6 +21,7 @@ namespace SkillFern.Networking
         private static bool isInitialized = false; // whether network sync has been initialized
 
         public static int saveCountdown = -1; // number of point network events left before a forced save
+        public static int careerCountdown = -1; // number of point network events left before career syncing
 
         enum EVENT_TYPE
         {
@@ -43,6 +44,7 @@ namespace SkillFern.Networking
             // mark as initialized to prevent multiple initializations
             isInitialized = true;
             saveCountdown = -1;
+            careerCountdown = -1;
 
             // subscribe to photon events
             PhotonNetwork.NetworkingClient.EventReceived += OnEventReceived;
@@ -72,11 +74,7 @@ namespace SkillFern.Networking
                     SkillDataManager.instance.baseSkillPoints = baseSkillPoints;
                     return;
                 case EVENT_TYPE.CAREER_SYNC:
-                    int careerPoints = (int)payload[2]; // amount of career points expected
-                    int pointsEarned = (int)payload[3]; // amount of points actually owned
-
-                    if (steamID == PlayerHelper.GetLocalSteamID())
-                        SkillDataManager.instance.ReconcileCareer(careerPoints, pointsEarned);
+                    
                     break;
                 case EVENT_TYPE.NODE_PURCHASE:
                     string nodeID = (string)payload[2];   // ID of the node to purchase
@@ -106,6 +104,18 @@ namespace SkillFern.Networking
                             saveCountdown = -1;
                             Plugin.LogInfo("Forcing save after skill point updates. . .");
                             SaveManager.Save(SaveManager.lastFile);
+                        }
+                    }
+
+                    // if host, move career countdown
+                    if (careerCountdown > 0 && PlayerHelper.IsHost())
+                    {
+                        careerCountdown--;
+                        if (careerCountdown == 0)
+                        {
+                            careerCountdown = -1;
+                            Plugin.LogInfo("Syncing careers. . .");
+                            SyncCareer();
                         }
                     }
                     break;
@@ -226,13 +236,15 @@ namespace SkillFern.Networking
          * Syncs every skill between all players
          */
         public static void SyncAll() {
-            if (!GameManager.Multiplayer())
+            if (!GameManager.Multiplayer() || !PlayerHelper.IsHost())
                 return;
 
             Plugin.LogInfo("Syncing all skill data. . .");
 
             List<string> idsSynced = new List<string>();
             List<string> idsInGame = PlayerHelper.GetAllPlayerSteamIDs();
+
+            careerCountdown = 0;
 
             // for each skill data entry
             foreach (SkillData skillData in SkillDataManager.instance.skillDatas) {
@@ -259,21 +271,7 @@ namespace SkillFern.Networking
                 // sync skill points
                 Plugin.LogInfo("Syncing skill points");
                 UpdateSkillPoints(skillData.steamID, skillData.skillPoints, true);
-
-                // reconcile career if fair points is enabled
-                if (ConfigHelper.FairDistribution())
-                {
-                    Plugin.LogInfo("Reconciling career");
-
-                    // payload containing actual data to send
-                    object[] payload1 = new object[] { EVENT_TYPE.CAREER_SYNC, skillData.steamID, SkillDataManager.instance.careerPoints, skillData.pointsGained };
-
-                    // message should go to all players
-                    RaiseEventOptions eventOptions1 = new RaiseEventOptions { Receivers = ReceiverGroup.All };
-
-                    // send the event on the correct channel with reliable delivery
-                    PhotonNetwork.RaiseEvent(SKILL_DATA_CHANNEL, payload1, eventOptions1, SendOptions.SendReliable);
-                }
+                careerCountdown++;
 
                 idsSynced.Add(skillData.steamID);
             }
@@ -288,6 +286,8 @@ namespace SkillFern.Networking
                 if (idsSynced.Contains(id))
                     continue;
 
+                careerCountdown++;
+
                 // if fair distribution is on, start them with the career points
                 if (ConfigHelper.FairDistribution())
                 {
@@ -299,6 +299,8 @@ namespace SkillFern.Networking
                     Plugin.LogInfo("Starting " + id + " with " + ConfigHelper.StartingSkillPoints() + " points.");
                     UpdateSkillPoints(id, ConfigHelper.StartingSkillPoints(), true);
                 }
+
+                idsSynced.Add(id);
             }
 
             Plugin.LogInfo("Skill data synced!");
@@ -316,6 +318,34 @@ namespace SkillFern.Networking
             // send the event on the correct channel with reliable delivery
             PhotonNetwork.RaiseEvent(SKILL_DATA_CHANNEL, payload, eventOptions, SendOptions.SendReliable);
 
+        }
+
+        public static void SyncCareer() {
+            Plugin.LogInfo("Career points: " + SkillDataManager.instance.careerPoints);
+
+            // cycle through all synced entries and reconcile career (if enabled)
+            if (ConfigHelper.FairDistribution())
+            {
+                Plugin.LogInfo("Reconciling careers");
+                foreach (string id in PlayerHelper.GetAllPlayerSteamIDs())
+                {
+                    if (id == PlayerHelper.GetLocalSteamID())
+                        continue;
+
+                    SkillData skillData = SkillDataManager.instance.GetPlayerData(id);
+
+                    Plugin.LogInfo("Reconciling " + id);
+                    Plugin.LogInfo("Points gained: " + skillData.pointsGained);
+
+                    int difference = SkillDataManager.instance.careerPoints - skillData.pointsGained;
+                    Plugin.LogInfo("Difference: " + difference);
+                    if (difference > 0)
+                    {
+                        Plugin.LogInfo("Adjusting " + difference + " career points to " + id);
+                        UpdateSkillPoints(id, difference);
+                    }
+                }
+            }
         }
 
     }

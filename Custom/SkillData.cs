@@ -109,7 +109,7 @@ namespace SkillFern.Custom
             skillPoints = ConfigHelper.StartingSkillPoints();
             ownedNodes = new List<string>();
 
-            pointsGained = ConfigHelper.StartingSkillPoints();
+            pointsGained = 0;
         }
 
         [JsonConstructor]

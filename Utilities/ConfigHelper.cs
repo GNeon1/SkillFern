@@ -15,7 +15,7 @@ namespace SkillFern.Utilities
         public static bool ShopUpgradesDisabled() { return disableShopUpgrades.Value; }
 
         private static ConfigEntry<bool> fairDistribution;
-        public static bool FairDistribution() { return false && fairDistribution.Value; }
+        public static bool FairDistribution() { return fairDistribution.Value; }
 
         private static ConfigEntry<int> startingSkillPoints;
         public static int StartingSkillPoints() { return startingSkillPoints.Value; }
@@ -39,7 +39,7 @@ namespace SkillFern.Utilities
             moonSkillPoints = config.Bind("General", "PointsPerMoon", 1, new ConfigDescription("How many additional skill points to earn per moon phase (default 1)", new AcceptableValueRange<int>(0, 100)));
 
             disableShopUpgrades = config.Bind("Miscellaneous", "DisableUpgrades", true, "Whether to disable the vanilla shop upgrades (on by default)");
-            //fairDistribution = config.Bind("Miscellaneous", "FairDistribution", true, "Whether to distribute equal skill points to players who joined late or missed levels to ensure they don't fall behind (on by default)");
+            fairDistribution = config.Bind("Miscellaneous", "FairDistribution", true, "Whether to distribute equal skill points to players who joined late or missed levels to ensure they don't fall behind (on by default)");
 
             enableDebug = config.Bind("Debug", "EnableDebug", false, "Whether to spam the log with my debug info");
 

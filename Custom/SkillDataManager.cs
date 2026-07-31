@@ -24,7 +24,7 @@ namespace SkillFern.Custom
         [JsonProperty("skillDatas")]
         public List<SkillData> skillDatas { get; set; } // list of skill data objects for each player
 
-        public int careerPoints; // total number of skill points earned this run
+        public int careerPoints;    // total number of skill points earned this run
         public int moonSkillPoints; // how many skill points to earn per moon phase (for UI only)
         public int baseSkillPoints; // how many skill points to earn per level (for UI only)
 
@@ -113,20 +113,28 @@ namespace SkillFern.Custom
                 // create new skill data for the player
                 playerData = new SkillData(steamID);
                 skillDatas.Add(playerData);
+
+                // if syncing, update points gained
+                if (syncing)
+                    playerData.pointsGained = amount;
+
+                Plugin.LogInfo("!!! CREATED NEW SKILL DATA with " + playerData.pointsGained + " points");
             }
 
+            // if freshly syncing points, just set the amount
             if (syncing)
-            {
-                if (playerData.pointsGained == 0)
-                    playerData.pointsGained = amount;
                 playerData.skillPoints = amount;
-            }
+            // otherwise. . .
             else
             {
+                // if not subtracting. . .
                 if (amount > 0)
                 {
+                    // update career points as self
                     if (steamID == PlayerHelper.GetLocalSteamID())
                         careerPoints += amount;
+
+                    // increase points gained for specified player
                     playerData.pointsGained += amount;
                 }
 
@@ -335,26 +343,6 @@ namespace SkillFern.Custom
                     break;
             }
             return oldValue;
-        }
-
-        /*
-         * Syncs a player's number of points with the total they should have earned (for late joiners)
-         * 
-         * @param correctPoints - the correct number of points to have gained this run in total
-         * @param ownedPoints - how many points this player actually owns
-         */
-        public void ReconcileCareer(int correctPoints, int ownedPoints) {
-            // update owned points
-            if (GetLocalPlayerData() != null)
-                GetLocalPlayerData().pointsGained = ownedPoints;
-            careerPoints = ownedPoints;
-
-            // calculate the point difference
-            int difference = correctPoints - ownedPoints;
-
-            // if the difference is not zero, update points over network
-            if (difference > 0)
-                SkillNetworkSync.UpdateSkillPoints(PlayerHelper.GetLocalSteamID(), difference);
         }
 
     }
