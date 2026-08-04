@@ -29,6 +29,12 @@ namespace SkillFern.Utilities
         private static ConfigEntry<bool> enableDebug;
         public static bool EnableDebug() { return enableDebug == null || enableDebug.Value; }
 
+        private static ConfigEntry<int> edgeNodeBase;
+        public static int EdgeNodeBase() { return edgeNodeBase.Value; }
+
+        private static ConfigEntry<int> edgeNodeIncrement;
+        public static int EdgeNodeIncrement() { return edgeNodeIncrement.Value; }
+
         /*
          * Initialize all config values
          */
@@ -37,6 +43,9 @@ namespace SkillFern.Utilities
             startingSkillPoints = config.Bind("General", "StartingSkillPoints", 0, new ConfigDescription("The number of skill points to start with (default 0)", new AcceptableValueRange<int>(0, 100)));
             baseSkillPointsEarned = config.Bind("General", "BasePointsEarned", 2, new ConfigDescription("The base number of skill points gained each level (default 2)", new AcceptableValueRange<int>(0, 100)));
             moonSkillPoints = config.Bind("General", "PointsPerMoon", 1, new ConfigDescription("How many additional skill points to earn per moon phase (default 1)", new AcceptableValueRange<int>(0, 100)));
+
+            edgeNodeBase = config.Bind("Edge Nodes", "EdgeNodeBaseCost", 5, new ConfigDescription("Starting cost for each edge node (default 5)", new AcceptableValueRange<int>(0, 100)));
+            edgeNodeIncrement = config.Bind("Edge Nodes", "EdgeNodeIncrement", 1, new ConfigDescription("How much the price of an edge node goes up per purchase (default 1)", new AcceptableValueRange<int>(0, 100)));
 
             disableShopUpgrades = config.Bind("Miscellaneous", "DisableUpgrades", true, "Whether to disable the vanilla shop upgrades (on by default)");
             fairDistribution = config.Bind("Miscellaneous", "FairDistribution", true, "Whether to distribute equal skill points to players who joined late or missed levels to ensure they don't fall behind (on by default)");

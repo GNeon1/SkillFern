@@ -69,16 +69,22 @@ namespace SkillFern.Networking
                 case EVENT_TYPE.CONFIG_SYNC:
                     int moonSkillPoints = (int)payload[2]; // amount of skill points to earn per moon phase (for UI)
                     int baseSkillPoints = (int)payload[3]; // amount of skill points to earn per level (for UI)
+                    int baseEdgeNode = (int)payload[4]; // base cost of edge nodes
+                    int edgeNodeIncrement = (int)payload[4];
 
                     SkillDataManager.instance.moonSkillPoints = moonSkillPoints;
                     SkillDataManager.instance.baseSkillPoints = baseSkillPoints;
+                    SkillDataManager.instance.baseEdgeNode = baseEdgeNode;
+                    SkillDataManager.instance.edgeNodeIncrement = edgeNodeIncrement;
                     return;
                 case EVENT_TYPE.CAREER_SYNC:
                     
                     break;
                 case EVENT_TYPE.NODE_PURCHASE:
                     string nodeID = (string)payload[2];   // ID of the node to purchase
-                    SkillDataManager.instance.PurchaseNode(steamID, nodeID);
+                    bool sync = (bool)payload[3];
+
+                    SkillDataManager.instance.PurchaseNode(steamID, nodeID, sync);
                     break;
                 case EVENT_TYPE.SKILL_UPDATE:
                 case EVENT_TYPE.SKILL_SYNC:
@@ -185,7 +191,7 @@ namespace SkillFern.Networking
          * @param steamID - steamID of the player to update
          * @param nodeID - ID of the node to purchase
          */
-        public static void PurchaseNode(string steamID, string nodeID)
+        public static void PurchaseNode(string steamID, string nodeID, bool sync = false)
         {
             // if not multiplayer, update locally and return
             if (!GameManager.Multiplayer()) {
@@ -196,7 +202,7 @@ namespace SkillFern.Networking
             Plugin.LogInfo("Purchasing node " + nodeID + " for " + steamID + " on network.");
 
             // payload containing actual data to send
-            object[] payload = new object[] { EVENT_TYPE.NODE_PURCHASE, steamID, nodeID };
+            object[] payload = new object[] { EVENT_TYPE.NODE_PURCHASE, steamID, nodeID, sync };
 
             // message should go to all players
             RaiseEventOptions eventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };
@@ -266,7 +272,7 @@ namespace SkillFern.Networking
                 // for each node purchased
                 foreach (string nodeID in skillData.ownedNodes)
                     // sync that node
-                    PurchaseNode(skillData.steamID, nodeID);
+                    PurchaseNode(skillData.steamID, nodeID, true);
 
                 // sync skill points
                 Plugin.LogInfo("Syncing skill points");
@@ -310,7 +316,7 @@ namespace SkillFern.Networking
             // sync skill points per moon phase to all players
 
             // payload containing actual data to send
-            object[] payload = new object[] { EVENT_TYPE.CONFIG_SYNC, PlayerHelper.GetLocalSteamID(), ConfigHelper.MoonSkillPoints(), ConfigHelper.BaseSkillPointsEarned()};
+            object[] payload = new object[] { EVENT_TYPE.CONFIG_SYNC, PlayerHelper.GetLocalSteamID(), ConfigHelper.MoonSkillPoints(), ConfigHelper.BaseSkillPointsEarned(), ConfigHelper.EdgeNodeBase(), ConfigHelper.EdgeNodeIncrement()};
 
             // message should go to all players
             RaiseEventOptions eventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.All };

@@ -133,6 +133,7 @@
     <Compile Include="Patches\RunManagerPatch.cs" />
     <Compile Include="Patches\ResultScreenUIPatch.cs" />
     <Compile Include="UI\HoverText.cs" />
+    <Compile Include="UI\EdgeNode.cs" />
     <Compile Include="UI\UpgradeNode.cs" />
     <Compile Include="UI\FernNode.cs" />
     <Compile Include="Custom\SaveManager.cs" />

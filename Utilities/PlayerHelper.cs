@@ -107,16 +107,14 @@ namespace SkillFern.Utilities
             AccessTools.Field(typeof(PlayerHealth), "maxHealth").SetValue(playerAvatar.playerHealth, (int)(STARTING_HEALTH + newLevel * HEALTH_INCREMENT));
 
             int maxHealth = (int)AccessTools.Field(typeof(PlayerHealth), "maxHealth").GetValue(playerAvatar.playerHealth);
+            
             int currentHealth = (int)AccessTools.Field(typeof(PlayerHealth), "health").GetValue(playerAvatar.playerHealth);
+            Plugin.LogInfo("LOCAL Updating health starting at " + currentHealth);
 
             if (levelDifference != 0)
             {
                 CameraGlitch.Instance.PlayShortHeal();
                 AccessTools.Field(typeof(PlayerHealth), "health").SetValue(playerAvatar.playerHealth, currentHealth + levelDifference * HEALTH_INCREMENT);
-                if (GameManager.Multiplayer())
-                {
-                    playerAvatar.photonView.RPC("UpdateHealthRPC", RpcTarget.Others, new object[] { maxHealth, currentHealth + levelDifference * HEALTH_INCREMENT, true, false });
-                }
             }
         }
 

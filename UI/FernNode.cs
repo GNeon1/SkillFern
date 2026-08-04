@@ -29,7 +29,7 @@ namespace SkillFern.UI
         private List<LineContainer> lines = new List<LineContainer>();
 
         public string nodeID; // unique ID for the node
-        public Image targetImage; // the image component to change the color of when purchased
+        public Image[] targetImages; // the image component to change the color of when purchased
         public TextMeshProUGUI costText; // text to display current skill points
         public FernNode[] dependencies; // if any of these nodes is purchased, this node is unlocked
         public int cost; // cost of the node in skill points
@@ -42,12 +42,30 @@ namespace SkillFern.UI
         private MenuPageSkills skillsPage; // parent skills page
 
         public bool isOwned() { return owned; }
-        public void setOwned(bool newOwned) { owned = newOwned; }
+        public virtual void setOwned(bool newOwned) { owned = newOwned; }
 
         /*
          * Draw a line to each of this node's dependencies
          */
         public void DrawLines(GameObject lineContainer, int lineThickness) {
+
+            if (Application.isEditor)
+            {
+                Debug.Log(gameObject.name);
+                nodeID = System.Guid.NewGuid().ToString();
+
+                var images = transform.GetComponentsInChildren<Image>().ToList<Image>();
+                images.RemoveAt(0);
+                targetImages = images.ToArray();
+
+                transform.GetChild(1).GetComponent<TextMeshProUGUI>().SetText("");
+                costText = transform.GetChild(2).GetComponent<TextMeshProUGUI>();
+                costText.SetText("" + cost);
+            }
+
+            if (dependencies == null || dependencies.Length == 0)
+                return;
+
             // create new list of lines
             lines = new List<LineContainer>();
 
@@ -103,10 +121,14 @@ namespace SkillFern.UI
         /*
          * Assign a unique ID to this node in editor
          */
-        public void Reset() {
+        public virtual void Reset() {
             cost = 1;
             nodeID = System.Guid.NewGuid().ToString();
-            targetImage = transform.GetChild(0).GetComponent<Image>();
+
+            var images = transform.GetComponentsInChildren<Image>().ToList<Image>();
+            images.RemoveAt(0);
+            targetImages = images.ToArray();
+
             dependencies = new FernNode[1];
             costText = transform.GetChild(2).GetComponent<TextMeshProUGUI>();
             costText.SetText("" + cost);
@@ -136,7 +158,7 @@ namespace SkillFern.UI
         /*
          * Initializes this node
          */
-        public void Initialize() {
+        public virtual void Initialize() {
             // update the color based on ownership
             UpdateStatus();
         }
@@ -159,7 +181,7 @@ namespace SkillFern.UI
 
             Plugin.LogInfo($"Purchased node {nodeID}");
 
-            owned = true;
+            setOwned(true);
 
             SkillNetworkSync.UpdateSkillPoints(PlayerHelper.GetLocalSteamID(), -cost);
 
@@ -181,7 +203,7 @@ namespace SkillFern.UI
         /*
          * Update the color and button status of this node based on whether it is purchased
          */
-        public void UpdateStatus()
+        public virtual void UpdateStatus()
         {
             // show or hide cost text
             if (owned)
@@ -195,13 +217,14 @@ namespace SkillFern.UI
             else
                 button.enabled = false;
 
-            // set color
-            if (owned)
-                targetImage.color = Color.green;
-            else if (CanPurchase())
-                targetImage.color = Color.white;
-            else
-                targetImage.color = Color.gray;
+            foreach (Image targetImage in targetImages)
+                // set color
+                if (owned)
+                    targetImage.color = Color.green;
+                else if (CanPurchase())
+                    targetImage.color = Color.white;
+                else
+                    targetImage.color = Color.gray;
 
             // set color of dependency lines
             foreach (LineContainer line in lines)

@@ -27,6 +27,8 @@ namespace SkillFern.Custom
         public int careerPoints;    // total number of skill points earned this run
         public int moonSkillPoints; // how many skill points to earn per moon phase (for UI only)
         public int baseSkillPoints; // how many skill points to earn per level (for UI only)
+        public int baseEdgeNode;
+        public int edgeNodeIncrement;
 
         /*
          * Default constructor intializes variables (CALLED BY NEWTONSOFT. DO NOT INITIALIZE INSTANCE)
@@ -202,7 +204,7 @@ namespace SkillFern.Custom
          * @param steamID - Steam ID of the player to update
          * @param nodeID - ID of the node to purchase
          */
-        public void PurchaseNode(string steamID, string nodeID)
+        public void PurchaseNode(string steamID, string nodeID, bool sync = false)
         {
             // repair skill datas if broken
             if (skillDatas == null)
@@ -223,9 +225,11 @@ namespace SkillFern.Custom
                 skillDatas.Add(playerData);
             }
 
-            // add the new node to the player's list of owned nodes if not already owned
-            if (!playerData.ownedNodes.Contains(nodeID))
+            // add the new node to the player's list of owned nodes
+            if (!(sync && PlayerHelper.IsHost()))
                 playerData.ownedNodes.Add(nodeID);
+            else
+                Plugin.LogInfo("SKIPPING NODE ADDING");
         }
 
         /*
@@ -299,8 +303,8 @@ namespace SkillFern.Custom
                     oldValue = StatsManager.instance.playerUpgradeHealth.ContainsKey(steamID) ? StatsManager.instance.playerUpgradeHealth[steamID] : 0;
 
                     // find the player's current health and update it based on the level difference
-                    PlayerAvatar playerAvatar = SemiFunc.PlayerAvatarGetFromSteamID(steamID);
-                    int currentHealth = (int)AccessTools.Field(typeof(PlayerHealth), "health").GetValue(playerAvatar.playerHealth);
+                    int currentHealth = StatsManager.instance.GetPlayerHealth(steamID);
+                    Plugin.LogInfo("Updating health starting at " + currentHealth);
                     StatsManager.instance.SetPlayerHealth(steamID, currentHealth + (newLevel - oldValue) * PlayerHelper.HEALTH_INCREMENT, true);
 
                     StatsManager.instance.playerUpgradeHealth[steamID] = newLevel;

@@ -17,6 +17,10 @@ namespace SkillFern.Patches
     public class RunManagerPatch
     {
         /*
+         * 
+         */
+
+        /*
          * BEFORE RunManager.ResetProgress
          * 
          * Reset skill progress at end of game
