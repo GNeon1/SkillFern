@@ -7,6 +7,7 @@
 using HarmonyLib;
 using Newtonsoft.Json;
 using SkillFern.Networking;
+using SkillFern.UI;
 using SkillFern.Utilities;
 using System;
 using System.Collections.Generic;
@@ -141,6 +142,13 @@ namespace SkillFern.Custom
                 }
 
                 playerData.skillPoints += amount;
+            }
+
+            if (steamID == PlayerHelper.GetLocalSteamID())
+            {
+                CameraGlitch.Instance.PlayUpgrade();
+                if (MenuPageSkills.instance != null)
+                    MenuPageSkills.instance.UpdateSkillPointsText();
             }
 
             Plugin.LogInfo(steamID + " now has " + playerData.skillPoints + " points");

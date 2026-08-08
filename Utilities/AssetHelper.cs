@@ -4,6 +4,7 @@
 
 using REPOLib;
 using SkillFern.UI;
+using SkillFern.Unity;
 using System.Collections;
 using System.IO;
 using System.Reflection;
@@ -49,10 +50,43 @@ namespace SkillFern.Utilities
             menuManager.menuPages.Add(new MenuManager.MenuPages()
             {
                 menuPageIndex = (MenuPageIndex)MenuPageSkills.CUSTOM_PAGE_INDEX, // cast the custom index to the enum
-                menuPage = AssetHelper.GetPrefab(MenuPageSkills.PREFAB_NAME)    // get the prefab for this page
+                menuPage = AssetHelper.GetPrefab(MenuPageSkills.PREFAB_NAME)     // get the prefab for this page
             });
 
             Plugin.LogInfo("Menu pages registered!");
+        }
+
+        /*
+         * Registers SkillCubes when ready
+         */
+        public static IEnumerator RegisterSkillCubes() {
+            yield return new WaitUntil(() => loaded);
+
+            Plugin.LogInfo("Waiting to register skill cubes...");
+
+            // find and register skill cubes with ShopHelper
+            Plugin.LogInfo("Registering skill cubes...");
+
+            ShopHelper.skillCubes = bundle.LoadAllAssets<SkillCube>();
+
+            // register network prefabs
+            foreach (SkillCube cube in ShopHelper.skillCubes)
+            {
+                cube.maxAmountInShop = 0;
+                cube.physicalItem = false;
+
+                StatsManager.instance.itemDictionary.Add(cube.name, cube);
+
+                string targetName = cube.prefab.PrefabName;
+                GameObject prefab = GetPrefab(targetName);
+                cube.prefab.SetPrefab(prefab, prefab.name);
+
+                REPOLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(prefab);
+
+                Plugin.LogInfo("Registered network prefab for " + prefab.name);
+            }
+
+            Plugin.LogInfo(ShopHelper.skillCubes.Length + " skill cubes registered!");
         }
 
         /*

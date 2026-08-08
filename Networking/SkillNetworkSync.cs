@@ -70,7 +70,7 @@ namespace SkillFern.Networking
                     int moonSkillPoints = (int)payload[2]; // amount of skill points to earn per moon phase (for UI)
                     int baseSkillPoints = (int)payload[3]; // amount of skill points to earn per level (for UI)
                     int baseEdgeNode = (int)payload[4]; // base cost of edge nodes
-                    int edgeNodeIncrement = (int)payload[4];
+                    int edgeNodeIncrement = (int)payload[5];
 
                     SkillDataManager.instance.moonSkillPoints = moonSkillPoints;
                     SkillDataManager.instance.baseSkillPoints = baseSkillPoints;
@@ -126,6 +126,16 @@ namespace SkillFern.Networking
                     }
                     break;
             }
+        }
+
+        /*
+         * Updates every player's skill points
+         * 
+         * @param amount - amount of skill points to award or deduct
+         */
+        public static void UpdateSkillPointsForAll(int amount) {
+            foreach (string steamID in PlayerHelper.GetAllPlayerSteamIDs())
+                UpdateSkillPoints(steamID, amount);
         }
 
         /*

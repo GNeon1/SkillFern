@@ -20,7 +20,7 @@ namespace SkillFern.UI
         public void Awake()
         {
             base.Awake();
-            cost = ConfigHelper.EdgeNodeBase();
+            cost = SkillDataManager.instance.baseEdgeNode;
             timesPurchased = 0;
         }
 
@@ -33,7 +33,7 @@ namespace SkillFern.UI
                 return;
 
             timesPurchased++;
-            cost = ConfigHelper.EdgeNodeBase() + ConfigHelper.EdgeNodeIncrement() * timesPurchased;
+            cost = SkillDataManager.instance.baseEdgeNode + SkillDataManager.instance.edgeNodeIncrement * timesPurchased;
         }
 
         /*

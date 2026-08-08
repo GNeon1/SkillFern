@@ -25,6 +25,11 @@ namespace SkillFern.Patches
             // clear the pool of upgrades to draw from (if enabled in config)
             if (ConfigHelper.ShopUpgradesDisabled())
                 ___potentialItemUpgrades.Clear();
+
+            // add skill cubes if enabled in config
+            if (ConfigHelper.SkillPointsPurchaseable()) {
+                ShopHelper.SpawnSkillCubes(___potentialItemUpgrades);
+            }
         }
 
     }

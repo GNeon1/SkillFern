@@ -130,6 +130,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Patches\ExtractionPointPatch.cs" />
+    <Compile Include="Patches\ItemAttributesPatch.cs" />
     <Compile Include="Patches\RunManagerPatch.cs" />
     <Compile Include="Patches\ResultScreenUIPatch.cs" />
     <Compile Include="UI\HoverText.cs" />
@@ -150,10 +152,12 @@
     <Compile Include="UI\CustomMenuPage.cs" />
     <Compile Include="UI\MenuPageSkills.cs" />
     <Compile Include="UI\SkillsButton.cs" />
+    <Compile Include="Unity\SkillCube.cs" />
     <Compile Include="Utilities\AssetHelper.cs" />
     <Compile Include="Utilities\ConfigHelper.cs" />
     <Compile Include="Utilities\DebugHelper.cs" />
     <Compile Include="Utilities\PlayerHelper.cs" />
+    <Compile Include="Utilities\ShopHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

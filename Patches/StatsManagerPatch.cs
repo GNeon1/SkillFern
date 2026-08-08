@@ -7,12 +7,44 @@
 using BepInEx;
 using HarmonyLib;
 using SkillFern.Custom;
+using SkillFern.Utilities;
 
 namespace SkillFern.Patches
 {
     [HarmonyPatch(typeof(StatsManager))]
     public class StatsManagerPatch
     {
+        /*
+         * AFTER StatsManager.Start
+         * 
+         * Registers skill cubes
+         */
+        [HarmonyPatch("Start")]
+        [HarmonyPostfix]
+        public static void RegisterSkillCubes(StatsManager __instance)
+        {
+            Plugin.LogInfo("Waiting to register skill cubes...");
+            __instance.StartCoroutine(AssetHelper.RegisterSkillCubes());
+        }
+
+        /*
+         * BEFORE StatsManager.ItemPurchase
+         * 
+         * Checks if an entry in the itemsPurchased dictionary exists before trying to access it
+         */
+        [HarmonyPatch("ItemPurchase")]
+        [HarmonyPrefix]
+        public static bool ItemPurchase(string itemName)
+        {
+            // if it does not exist, create it
+            if (!StatsManager.instance.itemsPurchasedTotal.ContainsKey(itemName))
+            {
+                StatsManager.instance.itemsPurchased.Add(itemName, 0);
+                StatsManager.instance.itemsPurchasedTotal.Add(itemName, 0);
+            }
+
+            return true;
+        }
 
         /*
          * AFTER StatsManager.SaveGame

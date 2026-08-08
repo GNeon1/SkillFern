@@ -16,6 +16,8 @@ namespace SkillFern.UI
     public class MenuPageSkills : CustomMenuPage
     {
 
+        public static MenuPageSkills instance;
+
         public int lineThickness = 5;
         public GameObject lineContainer; // an empty gameobject to parent node lines to
         public TextMeshProUGUI skillPointsText; // text to display current skill points
@@ -51,6 +53,8 @@ namespace SkillFern.UI
          */
         protected override void Start()
         {
+            instance = this;
+
             this.customPageIndex = CUSTOM_PAGE_INDEX;
             base.Start();
 
@@ -96,11 +100,17 @@ namespace SkillFern.UI
          * Updates the status of every node and the skill points
          */
         public void UpdateAllNodes(int pointsCorrection = -1) {
-
-            skillPointsText.SetText("Points: " + (pointsCorrection == -1 ? SkillDataManager.instance.GetLocalSkillPoints() : pointsCorrection));
+            UpdateSkillPointsText(pointsCorrection);
 
             foreach (FernNode node in nodes)
                 node.UpdateStatus();
+        }
+
+        /*
+         * Updates the skill points text
+         */
+        public void UpdateSkillPointsText(int pointsCorrection = -1) {
+            skillPointsText.SetText("Points: " + (pointsCorrection == -1 ? SkillDataManager.instance.GetLocalSkillPoints() : pointsCorrection));
         }
 
         /*
