@@ -43,6 +43,8 @@ namespace SkillFern.Custom
             careerPoints = ConfigHelper.StartingSkillPoints();
             moonSkillPoints = ConfigHelper.MoonSkillPoints();
             baseSkillPoints = ConfigHelper.BaseSkillPointsEarned();
+            baseEdgeNode = ConfigHelper.EdgeNodeBase();
+            edgeNodeIncrement = ConfigHelper.EdgeNodeIncrement();
         }
 
         public static void Initialize()
