@@ -77,7 +77,7 @@ namespace SkillFern.Utilities
 
                 StatsManager.instance.itemDictionary.Add(cube.name, cube);
 
-                string targetName = cube.prefab.PrefabName;
+                string targetName = cube.shopPrefab.PrefabName;
                 GameObject prefab = GetPrefab(targetName);
                 cube.prefab.SetPrefab(prefab, prefab.name);
 

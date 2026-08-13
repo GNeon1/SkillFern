@@ -17,6 +17,7 @@ namespace SkillFern.Unity
         public static int SKILL_CUBE_INDEX = 25; // the index of the skill cube item type in the itemType enum
 
         public int skillPointValue = 1; // how many skill points this skill cube is worth
+        public PrefabRef shopPrefab;
 
         /*
          * Set default values

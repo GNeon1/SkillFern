@@ -43,7 +43,7 @@ namespace SkillFern
             // load the assets from bundles
             AssetHelper.LoadBundles();
 
-            Plugin.LogInfo("Newest 24");
+            Plugin.LogInfo("Newest 33");
         }
 
         public static void LogInfo(string msg)

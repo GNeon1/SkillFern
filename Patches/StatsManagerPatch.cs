@@ -30,18 +30,18 @@ namespace SkillFern.Patches
         /*
          * BEFORE StatsManager.ItemPurchase
          * 
-         * Checks if an entry in the itemsPurchased dictionary exists before trying to access it
+         * Skip the item if it is a skill cube
          */
         [HarmonyPatch("ItemPurchase")]
         [HarmonyPrefix]
         public static bool ItemPurchase(string itemName)
         {
+            Plugin.LogInfo("Purchasing item: " + itemName);
+            Plugin.LogInfo("Physical: " + StatsManager.instance.itemDictionary[itemName].physicalItem);
+
             // if it does not exist, create it
-            if (!StatsManager.instance.itemsPurchasedTotal.ContainsKey(itemName))
-            {
-                StatsManager.instance.itemsPurchased.Add(itemName, 0);
-                StatsManager.instance.itemsPurchasedTotal.Add(itemName, 0);
-            }
+            if (itemName.Substring(0, 7) == "SP Cube")
+                return false;
 
             return true;
         }

@@ -54,6 +54,7 @@ namespace SkillFern.Patches
 
             // set the price based on config and number of points
             ___value = (int)(ConfigHelper.SkillCubeCost() * ((SkillCube)___item).skillPointValue);
+            ___value -= (int)(___value * ConfigHelper.DiscountPerPoint() * (((SkillCube)___item).skillPointValue - 1));
             if (GameManager.Multiplayer() && ___photonView.ViewID != 0)
             {
                  ___photonView.RPC("GetValueRPC", RpcTarget.Others, new object[]
